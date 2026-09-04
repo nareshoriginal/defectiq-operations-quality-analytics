@@ -1,0 +1,4685 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>DefectIQ — Operations Quality Analytics</title>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.x/tabler-icons.min.css">
+
+<style>
+
+*{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+
+  --bg:#F7F8FC;--surface:#FFFFFF;--surface2:#F0F2F8;--border:#E2E6EF;--border2:#CDD3E0;
+
+  --text:#111827;--text2:#4B5563;--text3:#9CA3AF;
+
+  --blue:#1D4ED8;--blue-lt:#EFF4FF;--blue-mid:#3B6FE8;
+
+  --green:#15803D;--green-lt:#F0FDF4;--red:#B91C1C;--red-lt:#FEF2F2;
+
+  --amber:#92400E;--amber-lt:#FFFBEB;
+
+  --radius:8px;--radius-lg:12px;--radius-xl:16px;
+
+  --shadow:0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.04);
+
+  --shadow-md:0 4px 12px rgba(0,0,0,.08),0 2px 4px rgba(0,0,0,.04);
+
+  --font:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+
+  --transition:.15s ease;
+
+}
+
+html,body{height:100%;overflow:hidden;font-family:var(--font);font-size:14px;color:var(--text);background:var(--bg);-webkit-font-smoothing:antialiased}
+
+.app{display:flex;height:100vh;overflow:hidden}
+
+.sidebar{width:232px;min-width:232px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+
+.main-area{flex:1;display:flex;flex-direction:column;overflow:hidden}
+
+.sidebar-header{padding:20px 16px 16px;border-bottom:1px solid var(--border)}
+
+.brand{display:flex;align-items:center;gap:10px}
+
+.brand-icon{width:34px;height:34px;background:var(--blue);border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden}
+
+.brand-icon i{color:#fff;font-size:18px}
+
+.brand-icon img{width:100%;height:100%;object-fit:cover}
+
+.brand-text .name{font-size:15px;font-weight:600;color:var(--text);letter-spacing:-.2px}
+
+.brand-text .sub{font-size:11px;color:var(--text3);margin-top:1px}
+
+.nav-group-label{font-size:10px;font-weight:600;color:var(--text3);letter-spacing:.8px;text-transform:uppercase;padding:16px 16px 6px}
+
+.nav-item{display:flex;align-items:center;gap:9px;padding:8px 12px;margin:1px 8px;border-radius:var(--radius);cursor:pointer;transition:background var(--transition),color var(--transition);font-size:13px;color:var(--text2);font-weight:400;user-select:none}
+
+.nav-item i{font-size:17px;flex-shrink:0;color:var(--text3)}
+
+.nav-item:hover{background:var(--surface2);color:var(--text)}
+
+.nav-item:hover i{color:var(--text2)}
+
+.nav-item.active{background:var(--blue-lt);color:var(--blue);font-weight:500}
+
+.nav-item.active i{color:var(--blue)}
+
+.nav-badge{margin-left:auto;font-size:10px;padding:1px 6px;border-radius:20px;font-weight:500;background:var(--red-lt);color:var(--red)}
+
+.nav-badge.ok{background:var(--green-lt);color:var(--green)}
+
+.sidebar-footer{margin-top:auto;padding:12px 8px;border-top:1px solid var(--border)}
+
+.user-row{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:var(--radius);cursor:pointer;transition:background var(--transition)}
+
+.user-row:hover{background:var(--surface2)}
+
+.user-avatar{width:30px;height:30px;border-radius:50%;background:var(--blue-lt);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:var(--blue);flex-shrink:0;overflow:hidden}
+
+.user-avatar img{width:100%;height:100%;object-fit:cover}
+
+.user-name{font-size:12px;font-weight:500;color:var(--text)}
+
+.user-role{font-size:11px;color:var(--text3)}
+
+.topbar{height:52px;min-height:52px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 24px;gap:12px}
+
+.topbar-left{display:flex;align-items:center;gap:12px}
+
+.page-title{font-size:16px;font-weight:600;color:var(--text);letter-spacing:-.2px}
+
+.page-subtitle{font-size:12px;color:var(--text3)}
+
+.topbar-actions{display:flex;align-items:center;gap:8px}
+
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:var(--radius);font-size:13px;font-weight:500;cursor:pointer;border:1px solid var(--border2);background:var(--surface);color:var(--text2);transition:all var(--transition);white-space:nowrap;font-family:var(--font)}
+
+.btn:hover{background:var(--surface2);color:var(--text);border-color:var(--border2)}
+
+.btn:active{transform:scale(.98)}
+
+.btn:disabled{opacity:.55;cursor:not-allowed}
+
+.btn i{font-size:15px}
+
+.btn-primary{background:var(--blue);color:#fff;border-color:var(--blue)}
+
+.btn-primary:hover{background:#1a44c2;border-color:#1a44c2;color:#fff}
+
+.btn-danger{background:var(--red-lt);color:var(--red);border-color:#FECACA}
+
+.btn-success{background:var(--green-lt);color:var(--green);border-color:#BBF7D0}
+
+.btn-sm{padding:5px 10px;font-size:12px}
+
+.btn-sm i{font-size:13px}
+
+.screen{flex:1;overflow-y:auto;overflow-x:hidden;display:none;flex-direction:column}
+
+.screen.active{display:flex}
+
+.screen-body{padding:24px;flex:1}
+
+.upload-layout{display:grid;grid-template-columns:1fr 380px;gap:24px;max-width:1100px}
+
+.section-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:12px;display:flex;align-items:center;gap:8px}
+
+.section-title i{font-size:15px;color:var(--text3)}
+
+.file-slots{display:flex;flex-direction:column;gap:10px;margin-bottom:20px}
+
+.file-slot{border:1.5px dashed var(--border2);border-radius:var(--radius-lg);padding:16px;display:flex;align-items:center;gap:14px;cursor:pointer;transition:all var(--transition);background:var(--surface);position:relative}
+
+.file-slot:hover{border-color:var(--blue);background:var(--blue-lt)}
+
+.file-slot.dragover{border-color:var(--blue);background:var(--blue-lt);border-style:solid}
+
+.file-slot.loaded{border-color:#BBF7D0;border-style:solid;background:var(--green-lt)}
+
+.file-slot.loaded:hover{border-color:#86EFAC;background:#DCFCE7}
+
+.file-slot-icon{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:var(--surface2)}
+
+.file-slot.loaded .file-slot-icon{background:#DCFCE7}
+
+.file-slot-icon i{font-size:22px;color:var(--text3)}
+
+.file-slot.loaded .file-slot-icon i{color:var(--green)}
+
+.file-slot-info{flex:1;min-width:0}
+
+.file-slot-label{font-size:13px;font-weight:600;color:var(--text);margin-bottom:2px}
+
+.file-slot-sub{font-size:12px;color:var(--text3)}
+
+.file-slot.loaded .file-slot-label{color:var(--green)}
+
+.file-slot.loaded .file-slot-sub{color:#166534}
+
+.file-slot-action{flex-shrink:0}
+
+.file-remove{width:26px;height:26px;border-radius:50%;border:1px solid var(--border2);background:var(--surface);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all var(--transition)}
+
+.file-remove:hover{background:var(--red-lt);border-color:#FECACA;color:var(--red)}
+
+.file-remove i{font-size:13px;color:var(--text3)}
+
+.add-file-btn{border:1.5px dashed var(--border);border-radius:var(--radius-lg);padding:12px 16px;display:flex;align-items:center;gap:10px;cursor:pointer;transition:all var(--transition);background:transparent;width:100%;font-family:var(--font)}
+
+.add-file-btn:hover{border-color:var(--blue);background:var(--blue-lt)}
+
+.add-file-btn i{font-size:18px;color:var(--text3)}
+
+.add-file-btn span{font-size:13px;color:var(--text2)}
+
+.col-map-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px;margin-top:16px}
+
+.col-map-title{font-size:12px;font-weight:600;color:var(--text);margin-bottom:12px;display:flex;align-items:center;gap:6px}
+
+.col-map-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+.col-map-row{display:flex;flex-direction:column;gap:4px}
+
+.col-map-row label{font-size:11px;font-weight:500;color:var(--text3);text-transform:uppercase;letter-spacing:.4px}
+
+.col-map-row select{font-size:12px;padding:6px 8px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--surface);color:var(--text);font-family:var(--font);cursor:pointer}
+
+.col-map-row select:focus{outline:2px solid var(--blue);outline-offset:1px}
+
+.match-result{display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:var(--radius);margin-top:12px;font-size:13px}
+
+.match-result.success{background:var(--green-lt);color:var(--green);border:1px solid #BBF7D0}
+
+.match-result.warn{background:var(--amber-lt);color:var(--amber);border:1px solid #FCD34D}
+
+.match-result.error{background:var(--red-lt);color:var(--red);border:1px solid #FECACA}
+
+.match-result i{font-size:18px;flex-shrink:0}
+
+.upload-sidebar-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px;margin-bottom:16px}
+
+.upload-sidebar-card h4{font-size:12px;font-weight:600;color:var(--text);margin-bottom:12px;display:flex;align-items:center;gap:6px}
+
+.upload-sidebar-card h4 i{font-size:14px;color:var(--text3)}
+
+.tip-item{display:flex;gap:8px;margin-bottom:8px;font-size:12px;color:var(--text2);line-height:1.5}
+
+.tip-item:last-child{margin-bottom:0}
+
+.tip-icon{font-size:14px;color:var(--blue);flex-shrink:0;margin-top:1px}
+
+.dash-controls{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:20px}
+
+.period-tabs{display:flex;background:var(--surface2);border-radius:var(--radius);padding:3px;gap:2px}
+
+.period-tab{padding:5px 14px;border-radius:6px;font-size:12px;font-weight:500;color:var(--text2);cursor:pointer;transition:all var(--transition);border:none;background:transparent;font-family:var(--font)}
+
+.period-tab.active{background:var(--surface);color:var(--text);box-shadow:var(--shadow)}
+
+.filter-select{font-size:12px;padding:6px 10px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--surface);color:var(--text);font-family:var(--font);cursor:pointer;min-width:120px}
+
+.filter-select:focus{outline:2px solid var(--blue);outline-offset:1px}
+
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:20px}
+
+.kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px;transition:box-shadow var(--transition)}
+
+.kpi-card:hover{box-shadow:var(--shadow-md)}
+
+.kpi-label{font-size:11px;font-weight:500;color:var(--text3);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px;display:flex;align-items:center;gap:5px}
+
+.kpi-label i{font-size:13px}
+
+.kpi-value{font-size:26px;font-weight:600;color:var(--text);letter-spacing:-.5px;line-height:1}
+
+.kpi-sub{font-size:11px;color:var(--text3);margin-top:5px;display:flex;align-items:center;gap:4px}
+
+.kpi-card.danger .kpi-value{color:var(--red)}
+
+.kpi-card.warn .kpi-value{color:#D97706}
+
+.kpi-card.ok .kpi-value{color:var(--green)}
+
+.kpi-card.info .kpi-value{color:var(--blue)}
+
+.dash-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+
+.dash-grid.full{grid-template-columns:1fr}
+
+.chart-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px;overflow:hidden}
+
+.chart-card-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px;gap:8px}
+
+.chart-card-title{font-size:13px;font-weight:600;color:var(--text);letter-spacing:-.1px}
+
+.chart-card-sub{font-size:11px;color:var(--text3);margin-top:2px}
+
+.chart-legend{display:flex;flex-wrap:wrap;gap:12px;font-size:11px;color:var(--text2)}
+
+.legend-dot{width:9px;height:9px;border-radius:2px;flex-shrink:0}
+
+.data-table-wrap{overflow-x:auto;max-height:420px;overflow-y:auto}
+
+.data-table{width:100%;border-collapse:collapse;font-size:12px}
+
+.data-table th{font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;padding:8px 12px;border-bottom:1px solid var(--border);text-align:left;white-space:nowrap;background:var(--surface);position:sticky;top:0;z-index:1}
+
+.data-table th.sortable{cursor:pointer;user-select:none}
+
+.data-table th.sortable:hover{color:var(--text)}
+
+.data-table td{padding:9px 12px;border-bottom:1px solid var(--border);color:var(--text);vertical-align:middle;white-space:nowrap}
+
+.data-table tr:last-child td{border-bottom:none}
+
+.data-table tbody tr{transition:background var(--transition)}
+
+.data-table tbody tr:hover{background:var(--surface2)}
+
+.data-table .mono{font-family:'SF Mono','Fira Code',monospace;font-size:11px;color:var(--text2)}
+
+.data-table tr.subrow td{background:#FAFBFE;color:var(--text2);font-size:11.5px}
+
+.data-table tr.subrow td:first-child{padding-left:28px}
+
+.badge{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:500;white-space:nowrap}
+
+.badge-red{background:var(--red-lt);color:var(--red)}
+
+.badge-amber{background:var(--amber-lt);color:var(--amber)}
+
+.badge-green{background:var(--green-lt);color:var(--green)}
+
+.badge-blue{background:var(--blue-lt);color:var(--blue)}
+
+.badge-gray{background:var(--surface2);color:var(--text2)}
+
+.mini-bar-wrap{width:100%;background:var(--surface2);border-radius:4px;height:5px;overflow:hidden}
+
+.mini-bar-val{height:100%;border-radius:4px;transition:width .4s ease}
+
+.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;text-align:center;flex:1}
+
+.empty-state i{font-size:52px;color:var(--border2);margin-bottom:16px}
+
+.empty-state h3{font-size:16px;font-weight:600;color:var(--text2);margin-bottom:6px}
+
+.empty-state p{font-size:13px;color:var(--text3);max-width:320px;line-height:1.6}
+
+.settings-layout{display:grid;grid-template-columns:200px 1fr;gap:24px;max-width:900px}
+
+.settings-nav .s-nav-item{padding:8px 12px;border-radius:var(--radius);font-size:13px;color:var(--text2);cursor:pointer;transition:background var(--transition);margin-bottom:2px}
+
+.settings-nav .s-nav-item.active{background:var(--blue-lt);color:var(--blue);font-weight:500}
+
+.settings-nav .s-nav-item:hover:not(.active){background:var(--surface2)}
+
+.settings-section{display:none}
+
+.settings-section.active{display:block}
+
+.settings-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px;margin-bottom:16px}
+
+.settings-card h4{font-size:13px;font-weight:600;color:var(--text);margin-bottom:4px}
+
+.settings-card p{font-size:12px;color:var(--text3);margin-bottom:14px;line-height:1.6}
+
+.form-row{display:flex;flex-direction:column;gap:4px;margin-bottom:12px}
+
+.form-row label{font-size:12px;font-weight:500;color:var(--text2)}
+
+.form-row input,.form-row select{font-size:13px;padding:8px 10px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--surface);color:var(--text);font-family:var(--font)}
+
+.form-row input:focus,.form-row select:focus{outline:2px solid var(--blue);outline-offset:1px;border-color:transparent}
+
+.form-row .hint{font-size:11px;color:var(--text3)}
+
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)}
+
+.toggle-row:last-child{border-bottom:none}
+
+.toggle-label{font-size:13px;color:var(--text)}
+
+.toggle-sub{font-size:11px;color:var(--text3);margin-top:2px}
+
+.toggle{width:36px;height:20px;border-radius:20px;background:var(--border2);cursor:pointer;position:relative;transition:background var(--transition);flex-shrink:0}
+
+.toggle.on{background:var(--blue)}
+
+.toggle::after{content:'';position:absolute;width:14px;height:14px;border-radius:50%;background:#fff;top:3px;left:3px;transition:left var(--transition)}
+
+.toggle.on::after{left:19px}
+
+.brand-preview{display:flex;align-items:center;gap:14px;padding:12px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface2);margin-bottom:14px}
+
+.brand-preview .bp-icon{width:46px;height:46px;border-radius:10px;background:var(--blue);display:flex;align-items:center;justify-content:center;overflow:hidden}
+
+.brand-preview .bp-icon img{width:100%;height:100%;object-fit:cover}
+
+.brand-preview .bp-icon i{color:#fff;font-size:22px}
+
+.analysis-toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:20px;padding:14px 16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg)}
+
+.analysis-toolbar .toolbar-label{font-size:12px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-right:4px}
+
+.toast{position:fixed;bottom:24px;right:24px;background:var(--text);color:#fff;padding:12px 16px;border-radius:var(--radius);font-size:13px;display:flex;align-items:center;gap:8px;box-shadow:var(--shadow-md);transform:translateY(80px);opacity:0;transition:all .3s ease;z-index:1000;pointer-events:none}
+
+.toast.show{transform:translateY(0);opacity:1}
+
+.toast i{font-size:16px}
+
+.toast.success{background:#166534}
+
+.toast.error{background:var(--red)}
+
+::-webkit-scrollbar{width:5px;height:5px}
+
+::-webkit-scrollbar-track{background:transparent}
+
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:10px}
+
+::-webkit-scrollbar-thumb:hover{background:#9CA3AF}
+
+.spinner{width:18px;height:18px;border:2px solid var(--border2);border-top-color:var(--blue);border-radius:50%;animation:spin .6s linear infinite;flex-shrink:0}
+
+.spinner.lg{width:42px;height:42px;border-width:4px}
+
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.progress-bar{height:3px;background:var(--border);border-radius:3px;overflow:hidden;margin-top:6px}
+
+.progress-fill{height:100%;background:var(--blue);border-radius:3px;transition:width .3s ease}
+
+.divider{height:1px;background:var(--border);margin:16px 0}
+
+.report-item{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)}
+
+.report-item:last-child{border-bottom:none}
+
+.report-icon{width:38px;height:38px;border-radius:9px;background:var(--blue-lt);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+
+.report-icon i{font-size:18px;color:var(--blue)}
+
+.report-info{flex:1}
+
+.report-name{font-size:13px;font-weight:500;color:var(--text)}
+
+.report-desc{font-size:11px;color:var(--text3);margin-top:2px}
+
+/* ── ANALYSIS OVERLAY ── */
+
+.overlay{position:fixed;inset:0;background:rgba(15,23,42,.55);backdrop-filter:blur(4px);z-index:2000;display:none;align-items:center;justify-content:center}
+
+.overlay.show{display:flex}
+
+.overlay-card{background:var(--surface);border-radius:var(--radius-xl);padding:28px 32px;box-shadow:0 20px 60px rgba(0,0,0,.3);min-width:340px;text-align:center}
+
+.overlay-card h3{font-size:16px;font-weight:600;color:var(--text);margin:14px 0 4px}
+
+.overlay-card p{font-size:13px;color:var(--text3);margin-bottom:14px}
+
+.overlay-timer{font-size:32px;font-weight:600;color:var(--blue);font-variant-numeric:tabular-nums;letter-spacing:-1px}
+
+.overlay-step{font-size:12px;color:var(--text2);margin-top:8px;min-height:18px}
+
+.overlay-mini-bar{height:5px;background:var(--border);border-radius:5px;overflow:hidden;margin-top:14px}
+
+.overlay-mini-fill{height:100%;background:var(--blue);border-radius:5px;transition:width .3s ease;width:0%}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="app">
+
+<aside class="sidebar">
+
+  <div class="sidebar-header">
+
+    <div class="brand">
+
+      <div class="brand-icon" id="brandIcon"><i class="ti ti-chart-dots"></i></div>
+
+      <div class="brand-text">
+
+        <div class="name" id="brandName">DefectIQ</div>
+
+        <div class="sub" id="brandSub">Quality Analytics</div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <div style="overflow-y:auto;flex:1">
+
+    <div class="nav-group-label">Workspace</div>
+
+    <div class="nav-item active" data-screen="upload" onclick="switchScreen('upload',this)">
+
+      <i class="ti ti-cloud-upload"></i> Upload data
+
+    </div>
+
+    <div class="nav-item" data-screen="dashboard" onclick="switchScreen('dashboard',this)">
+
+      <i class="ti ti-layout-dashboard"></i> Dashboard
+
+    </div>
+
+    <div class="nav-item" data-screen="analysis" onclick="switchScreen('analysis',this)">
+
+      <i class="ti ti-telescope"></i> Deep analysis
+
+    </div>
+
+    <div class="nav-item" data-screen="escalations" onclick="switchScreen('escalations',this)">
+
+      <i class="ti ti-alert-hexagon"></i> Escalation log
+
+      <span class="nav-badge" id="esc-badge" style="display:none">0</span>
+
+    </div>
+
+    <div class="nav-group-label">Reports</div>
+
+    <div class="nav-item" data-screen="export" onclick="switchScreen('export',this)">
+
+      <i class="ti ti-file-export"></i> Export reports
+
+    </div>
+
+    <div class="nav-item" data-screen="history" onclick="switchScreen('history',this)">
+
+      <i class="ti ti-history"></i> Upload history
+
+    </div>
+
+    <div class="nav-group-label">System</div>
+
+    <div class="nav-item" data-screen="settings" onclick="switchScreen('settings',this)">
+
+      <i class="ti ti-settings"></i> Settings
+
+    </div>
+
+    <div class="nav-item" onclick="showAbout()">
+
+      <i class="ti ti-info-circle"></i> About
+
+    </div>
+
+  </div>
+
+  <div class="sidebar-footer">
+
+    <div class="user-row" onclick="switchScreen('settings',document.querySelector('[data-screen=settings]'))">
+
+      <div class="user-avatar" id="userAvatar">GM</div>
+
+      <div>
+
+        <div class="user-name" id="userName">General Manager</div>
+
+        <div class="user-role" id="userRole">Operations Head</div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</aside>
+
+<div class="main-area">
+
+  <div class="topbar">
+
+    <div class="topbar-left">
+
+      <div>
+
+        <div class="page-title" id="pageTitle">Upload data</div>
+
+        <div class="page-subtitle" id="pageSubtitle">Import bookings &amp; escalation files to begin analysis</div>
+
+      </div>
+
+    </div>
+
+    <div class="topbar-actions" id="topbarActions">
+
+      <div id="lastUpdated" style="font-size:11px;color:var(--text3);display:none"></div>
+
+    </div>
+
+  </div>
+
+  <!-- ══ SCREEN: UPLOAD ══ -->
+
+  <div class="screen active" id="screen-upload">
+
+    <div class="screen-body">
+
+      <div class="upload-layout">
+
+        <div class="upload-col">
+
+          <div class="section-title"><i class="ti ti-files"></i> Your data files</div>
+
+          <div class="file-slots" id="fileSlots">
+
+            <div class="file-slot" id="slot-bookings" onclick="triggerFileInput('bookings')"
+
+              ondragover="handleDragOver(event,'slot-bookings')"
+
+              ondragleave="handleDragLeave(event,'slot-bookings')"
+
+              ondrop="handleDrop(event,'bookings')">
+
+              <input type="file" id="input-bookings" accept=".csv,.xlsx,.xls" style="display:none" onchange="loadFileFromInput(this,'bookings')">
+
+              <div class="file-slot-icon"><i class="ti ti-table"></i></div>
+
+              <div class="file-slot-info">
+
+                <div class="file-slot-label" id="slot-bookings-label">Bookings file</div>
+
+                <div class="file-slot-sub" id="slot-bookings-sub">Drag &amp; drop or click · CSV, XLSX · any size</div>
+
+                <div class="progress-bar" id="prog-bookings" style="display:none"><div class="progress-fill" style="width:0%" id="prog-bookings-fill"></div></div>
+
+              </div>
+
+              <div class="file-slot-action" id="action-bookings">
+
+                <div class="badge badge-gray"><i class="ti ti-upload" style="font-size:12px"></i> Upload</div>
+
+              </div>
+
+            </div>
+
+            <div class="file-slot" id="slot-escalation" onclick="triggerFileInput('escalation')"
+
+              ondragover="handleDragOver(event,'slot-escalation')"
+
+              ondragleave="handleDragLeave(event,'slot-escalation')"
+
+              ondrop="handleDrop(event,'escalation')">
+
+              <input type="file" id="input-escalation" accept=".csv,.xlsx,.xls" style="display:none" onchange="loadFileFromInput(this,'escalation')">
+
+              <div class="file-slot-icon"><i class="ti ti-alert-triangle"></i></div>
+
+              <div class="file-slot-info">
+
+                <div class="file-slot-label" id="slot-escalation-label">Escalation report</div>
+
+                <div class="file-slot-sub" id="slot-escalation-sub">Drag &amp; drop or click · CSV, XLSX · any size</div>
+
+                <div class="progress-bar" id="prog-escalation" style="display:none"><div class="progress-fill" style="width:0%" id="prog-escalation-fill"></div></div>
+
+              </div>
+
+              <div class="file-slot-action" id="action-escalation">
+
+                <div class="badge badge-gray"><i class="ti ti-upload" style="font-size:12px"></i> Upload</div>
+
+              </div>
+
+            </div>
+
+          </div>
+
+          <div class="col-map-card" id="colMapCard" style="display:none">
+
+            <div class="col-map-title"><i class="ti ti-link" style="font-size:14px;color:var(--text3)"></i> Column mapping</div>
+
+            <div class="col-map-grid">
+
+              <div class="col-map-row"><label>Date format</label>
+
+                <select id="map-dateFmt">
+
+                  <option value="auto">Auto-detect</option>
+
+                  <option value="dmy">DD/MM/YYYY (Day first)</option>
+
+                  <option value="mdy">MM/DD/YYYY (Month first)</option>
+
+                  <option value="ymd">YYYY-MM-DD (ISO)</option>
+
+                </select>
+
+              </div>
+
+              <div class="col-map-row"><label>Bookings — Reservation ID</label><select id="map-bkId"></select></div>
+
+              <div class="col-map-row"><label>Bookings — Date column</label><select id="map-bkDate"></select></div>
+
+              <div class="col-map-row"><label>Bookings — Branch</label><select id="map-bkBranch"></select></div>
+
+              <div class="col-map-row"><label>Bookings — Service type</label><select id="map-bkService"></select></div>
+
+              <div class="col-map-row"><label>Bookings — Hotel / Property (opt)</label><select id="map-bkHotel"></select></div>
+
+              <div class="col-map-row"><label>Bookings — Amount (opt)</label><select id="map-bkAmount"></select></div>
+
+              <div class="col-map-row"><label>Bookings — Supplier (opt)</label><select id="map-bkSupplier"></select></div>
+
+              <div class="col-map-row"><label>Bookings — Location / City (opt)</label><select id="map-bkCity"></select></div>
+
+               <div class="col-map-row"><label>Escalation — Booking ID</label><select id="map-escId"></select></div>
+
+               <div class="col-map-row"><label>Escalation — Issue date</label><select id="map-escDate"></select></div>
+
+               <div class="col-map-row"><label>Escalation — Issue type</label><select id="map-escIssue"></select></div>
+
+               <div class="col-map-row"><label>Escalation — Department</label><select id="map-escDept"></select></div>
+
+               <div class="col-map-row"><label>Escalation — Submitted by</label><select id="map-escSubmitter"></select></div>
+
+              <div class="col-map-row"><label>Escalation — Service (opt)</label><select id="map-escService"></select></div>
+
+              <div class="col-map-row"><label>Escalation — Supplier (opt)</label><select id="map-escSupplier"></select></div>
+
+              <div class="col-map-row"><label>Escalation — Hotel / Property (opt)</label><select id="map-escHotel"></select></div>
+
+              <div class="col-map-row"><label>Escalation — City (opt)</label><select id="map-escCity"></select></div>
+
+            </div>
+
+            <div id="matchResult" style="display:none"></div>
+
+          </div>
+
+          <div style="display:flex;gap:10px;margin-top:16px" id="actionButtons">
+
+            <button class="btn btn-primary" id="analyseBtn" onclick="runAnalysis()" style="display:none">
+
+              <i class="ti ti-player-play"></i> Run analysis
+
+            </button>
+
+            <button class="btn" onclick="clearAll()">
+
+              <i class="ti ti-trash"></i> Clear all
+
+            </button>
+
+          </div>
+
+        </div>
+
+        <div>
+
+          <div class="upload-sidebar-card">
+
+            <h4><i class="ti ti-bulb"></i> Format guide</h4>
+
+            <div class="tip-item"><i class="ti ti-check tip-icon"></i><span>Bookings file needs a <strong>Reservation ID</strong>, date, and branch column</span></div>
+
+            <div class="tip-item"><i class="ti ti-check tip-icon"></i><span>Escalation file needs a <strong>Booking ID</strong> that matches the Reservation ID</span></div>
+
+            <div class="tip-item"><i class="ti ti-check tip-icon"></i><span>Supports <strong>CSV</strong> and <strong>Excel</strong> (.xlsx/.xls) — <strong>no file-size cap</strong></span></div>
+
+            <div class="tip-item"><i class="ti ti-check tip-icon"></i><span>Date formats: DD/MM/YYYY, MM/DD/YYYY, YYYY-MM-DD</span></div>
+
+            <div class="tip-item"><i class="ti ti-check tip-icon"></i><span>Large files (250 MB+) are parsed in the background — please be patient</span></div>
+
+          </div>
+
+          <div class="upload-sidebar-card">
+
+            <h4><i class="ti ti-target"></i> Defect ratio definition</h4>
+
+            <div style="font-size:12px;color:var(--text2);line-height:1.7">
+
+              <strong>Defect Ratio</strong> = Escalated Cases ÷ Total Bookings × 100<br><br>
+
+              <span style="color:var(--text3)">Target: ≤ 0.80% · Amber: 0.80–1.50% · Red: &gt;1.50%</span>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- ══ SCREEN: DASHBOARD ══ -->
+
+  <div class="screen" id="screen-dashboard">
+
+    <div class="screen-body">
+
+      <div class="dash-controls">
+
+        <div class="period-tabs">
+
+          <button class="period-tab active" onclick="setPeriod('monthly',this)">Monthly</button>
+
+          <button class="period-tab" onclick="setPeriod('weekly',this)">Weekly</button>
+
+          <button class="period-tab" onclick="setPeriod('quarterly',this)">Quarterly</button>
+
+          <button class="period-tab" onclick="setPeriod('yearly',this)">Yearly</button>
+
+        </div>
+
+        <select class="filter-select" id="flt-branch" onchange="applyFilters()"><option value="all">All branches</option></select>
+
+        <select class="filter-select" id="flt-dept" onchange="applyFilters()"><option value="all">All departments</option></select>
+
+        <select class="filter-select" id="flt-service" onchange="applyFilters()"><option value="all">All service types</option></select>
+
+        <select class="filter-select" id="flt-submitter" onchange="applyFilters()"><option value="all">All submitters</option></select>
+
+        <select class="filter-select" id="flt-city" onchange="applyFilters()"><option value="all">All cities</option></select>
+
+        <select class="filter-select" id="flt-year" onchange="applyFilters()"><option value="all">All years</option></select>
+
+        <select class="filter-select" id="flt-month" onchange="applyFilters()" style="display:none"><option value="all">All months</option></select>
+
+        <button class="btn btn-sm" onclick="resetFilters()"><i class="ti ti-filter-off"></i> Reset</button>
+
+        <button class="btn btn-sm btn-primary" onclick="switchScreen('export',document.querySelector('[data-screen=export]'))"><i class="ti ti-download"></i> Export</button>
+
+      </div>
+
+      <div class="kpi-grid" id="kpiGrid"></div>
+
+      <div id="dqBar" style="display:none;margin:8px 0 12px;padding:10px 14px;background:#FFFBEB;border:1px solid #FDE68A;border-radius:8px;font-size:13px;color:#92400E">
+
+        <span id="dqSummary"></span>
+
+        <button class="btn btn-sm" style="margin-left:12px" onclick="openDataQuality()"><i class="ti ti-search"></i> View details</button>
+
+      </div>
+
+      <div id="dqPanel" style="display:none;margin:0 0 16px;padding:16px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
+
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+
+          <div style="font-weight:600">Data Quality Report</div>
+
+          <button class="btn btn-sm" onclick="document.getElementById('dqPanel').style.display='none'"><i class="ti ti-x"></i> Close</button>
+
+        </div>
+
+        <div id="dqContent" style="font-size:13px"></div>
+
+      </div>
+
+      <div class="dash-grid">
+
+        <div class="chart-card" style="grid-column:1/-1">
+
+          <div class="chart-card-header">
+
+            <div>
+
+              <div class="chart-card-title" id="trendChartTitle">Defect ratio trend</div>
+
+              <div class="chart-card-sub" id="trendChartSub">Monthly DR % vs 0.80% target</div>
+
+            </div>
+
+            <div class="chart-legend">
+
+              <span style="display:flex;align-items:center;gap:4px"><span class="legend-dot" style="background:#1D4ED8"></span>DR %</span>
+
+              <span style="display:flex;align-items:center;gap:4px"><span class="legend-dot" style="background:#E5E7EB;border:1px solid #D1D5DB"></span>Bookings (scaled)</span>
+
+              <span style="display:flex;align-items:center;gap:4px"><span class="legend-dot" style="background:#EF4444;width:16px;height:3px;border-radius:2px"></span>Target</span>
+
+            </div>
+
+          </div>
+
+          <div style="position:relative;height:220px"><canvas id="trendChart"></canvas></div>
+
+        </div>
+
+      </div>
+
+      <div class="dash-grid">
+
+        <div class="chart-card">
+
+          <div class="chart-card-header">
+
+            <div>
+
+              <div class="chart-card-title">Branch performance</div>
+
+              <div class="chart-card-sub">Ranked by defect ratio</div>
+
+            </div>
+
+            <select class="filter-select" style="font-size:11px;padding:4px 8px;min-width:auto" id="branchSort" onchange="renderBranchTable()">
+
+              <option value="dr_desc">Highest DR first</option>
+
+              <option value="dr_asc">Lowest DR first</option>
+
+              <option value="bk_desc">Most bookings</option>
+
+              <option value="esc_desc">Most escalations</option>
+
+            </select>
+
+          </div>
+
+          <div class="data-table-wrap" id="branchTableWrap"></div>
+
+        </div>
+
+        <div class="chart-card">
+
+          <div class="chart-card-header">
+
+            <div>
+
+              <div class="chart-card-title">Issue type analysis</div>
+
+              <div class="chart-card-sub">Escalation count by issue type</div>
+
+            </div>
+
+          </div>
+
+          <div style="position:relative;height:280px"><canvas id="issueChart"></canvas></div>
+
+        </div>
+
+      </div>
+
+      <div class="dash-grid">
+
+        <div class="chart-card">
+
+          <div class="chart-card-header">
+
+            <div>
+
+              <div class="chart-card-title">Department comparison</div>
+
+              <div class="chart-card-sub">Escalations &amp; DR % by department</div>
+
+            </div>
+
+          </div>
+
+          <div style="position:relative;height:240px"><canvas id="deptChart"></canvas></div>
+
+        </div>
+
+        <div class="chart-card">
+
+          <div class="chart-card-header">
+
+            <div>
+
+              <div class="chart-card-title">Submitter trend</div>
+
+              <div class="chart-card-sub">Escalations submitted over time — by handler</div>
+
+            </div>
+
+          </div>
+
+          <div style="position:relative;height:240px"><canvas id="submitterChart"></canvas></div>
+
+        </div>
+
+      </div>
+
+      <div class="dash-grid full">
+
+        <div class="chart-card">
+
+          <div class="chart-card-header">
+
+            <div>
+
+              <div class="chart-card-title">Top 10 hotels by escalations</div>
+
+              <div class="chart-card-sub">Each hotel expanded by issue type</div>
+
+            </div>
+
+          </div>
+
+          <div class="data-table-wrap" id="hotelsTableWrap" style="max-height:520px"></div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- ══ SCREEN: DEEP ANALYSIS ══ -->
+
+  <div class="screen" id="screen-analysis">
+
+    <div class="screen-body">
+
+      <div class="analysis-toolbar">
+
+        <span class="toolbar-label">Analyse by:</span>
+
+        <select class="filter-select" id="analysis-dim1" onchange="renderAnalysis()">
+
+          <option value="branch">Branch</option>
+
+          <option value="dept">Department</option>
+
+          <option value="service">Service type</option>
+
+          <option value="supplier">Supplier</option>
+
+          <option value="issue">Issue type</option>
+
+          <option value="hotel">Hotel</option>
+
+          <option value="submitter">Submitted by</option>
+
+          <option value="city">City</option>
+
+        </select>
+
+        <span class="toolbar-label" style="margin-left:8px">Cross with:</span>
+
+        <select class="filter-select" id="analysis-dim2" onchange="renderAnalysis()">
+
+          <option value="none">— none —</option>
+
+          <option value="month">Month</option>
+
+          <option value="quarter">Quarter</option>
+
+          <option value="branch">Branch</option>
+
+          <option value="service">Service type</option>
+
+          <option value="supplier">Supplier</option>
+
+          <option value="dept">Department</option>
+
+          <option value="issue">Issue type</option>
+
+          <option value="submitter">Submitted by</option>
+
+          <option value="city">City</option>
+
+        </select>
+
+        <span class="toolbar-label" style="margin-left:8px">Then by:</span>
+
+        <select class="filter-select" id="analysis-dim3" onchange="renderAnalysis()">
+
+          <option value="none">— none —</option>
+
+          <option value="month">Month</option>
+
+          <option value="quarter">Quarter</option>
+
+          <option value="branch">Branch</option>
+
+          <option value="service">Service type</option>
+
+          <option value="supplier">Supplier</option>
+
+          <option value="dept">Department</option>
+
+          <option value="issue">Issue type</option>
+
+          <option value="submitter">Submitted by</option>
+
+          <option value="city">City</option>
+
+        </select>
+
+        <span class="toolbar-label" style="margin-left:8px">Metric:</span>
+
+        <select class="filter-select" id="analysis-metric" onchange="renderAnalysis()">
+
+          <option value="dr">Defect ratio %</option>
+
+          <option value="esc">Escalation count</option>
+
+          <option value="bk">Booking volume</option>
+
+        </select>
+
+        <span class="toolbar-label" style="margin-left:8px">View:</span>
+
+        <select class="filter-select" id="analysis-view" onchange="renderAnalysis()">
+
+          <option value="bar">Bar chart</option>
+
+          <option value="stacked">Stacked bar</option>
+
+          <option value="heatmap">Heatmap</option>
+
+          <option value="line">Trend lines</option>
+
+        </select>
+
+        <span class="toolbar-label" style="margin-left:8px">Sort:</span>
+
+        <select class="filter-select" id="analysis-sort" onchange="renderAnalysis()">
+
+          <option value="desc">Highest first</option>
+
+          <option value="asc">Lowest first</option>
+
+          <option value="alpha">A–Z</option>
+
+        </select>
+
+        <button class="btn btn-sm" style="margin-left:auto" onclick="exportAnalysis()"><i class="ti ti-download"></i> Export</button>
+
+      </div>
+
+      <div class="chart-card" style="margin-bottom:16px">
+
+        <div style="position:relative;height:360px"><canvas id="analysisChart"></canvas></div>
+
+        <div id="heatmapWrap" style="display:none;overflow:auto"></div>
+
+      </div>
+
+      <div class="chart-card">
+
+        <div class="chart-card-header">
+
+          <div class="chart-card-title" id="analysisTableTitle">Analysis table</div>
+
+        </div>
+
+        <div class="data-table-wrap" id="analysisTableWrap"></div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- ══ SCREEN: ESCALATION LOG ══ -->
+
+  <div class="screen" id="screen-escalations">
+
+    <div class="screen-body">
+
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap">
+
+        <input type="text" id="escSearch" placeholder="Search booking ID, branch, issue..." style="flex:1;min-width:200px;font-size:13px;padding:8px 12px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--surface);color:var(--text);font-family:var(--font)" oninput="filterEscalations()">
+
+        <select class="filter-select" id="escBranchFlt" onchange="filterEscalations()"><option value="all">All branches</option></select>
+
+        <select class="filter-select" id="escIssueFlt" onchange="filterEscalations()"><option value="all">All issue types</option></select>
+
+        <select class="filter-select" id="escSupplierFlt" onchange="filterEscalations()"><option value="all">All suppliers</option></select>
+
+        <select class="filter-select" id="escCityFlt" onchange="filterEscalations()"><option value="all">All cities</option></select>
+
+        <select class="filter-select" id="escStatusFlt" onchange="filterEscalations()"><option value="all">All statuses</option></select>
+
+        <button class="btn btn-sm btn-primary" onclick="exportEscalations()"><i class="ti ti-download"></i> Export CSV</button>
+
+      </div>
+
+      <div id="escStats" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px"></div>
+
+      <div class="chart-card">
+
+        <div class="data-table-wrap" id="escTableWrap" style="max-height:none"></div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- ══ SCREEN: EXPORT ══ -->
+
+  <div class="screen" id="screen-export">
+
+    <div class="screen-body" style="max-width:700px">
+
+      <div class="chart-card">
+
+        <div class="chart-card-title" style="margin-bottom:4px">Export reports</div>
+
+        <div style="font-size:12px;color:var(--text3);margin-bottom:16px">Download analysis in CSV or Excel format. Exports reflect the current filters.</div>
+
+        <div id="exportList">
+
+          <div class="report-item">
+
+            <div class="report-icon"><i class="ti ti-table-export"></i></div>
+
+            <div class="report-info"><div class="report-name">Monthly summary</div><div class="report-desc">DR by month</div></div>
+
+            <button class="btn btn-sm" onclick="exportReport('monthly')"><i class="ti ti-download"></i> CSV</button>
+
+          </div>
+
+          <div class="report-item">
+
+            <div class="report-icon"><i class="ti ti-table-export"></i></div>
+
+            <div class="report-info"><div class="report-name">Weekly summary</div><div class="report-desc">Week-by-week (Monday-anchored)</div></div>
+
+            <button class="btn btn-sm" onclick="exportReport('weekly')"><i class="ti ti-download"></i> CSV</button>
+
+          </div>
+
+          <div class="report-item">
+
+            <div class="report-icon"><i class="ti ti-table-export"></i></div>
+
+            <div class="report-info"><div class="report-name">Branch performance</div><div class="report-desc">All branches ranked by DR</div></div>
+
+            <button class="btn btn-sm" onclick="exportReport('branch')"><i class="ti ti-download"></i> CSV</button>
+
+          </div>
+
+          <div class="report-item">
+
+            <div class="report-icon"><i class="ti ti-alert-hexagon" style="color:var(--red)"></i></div>
+
+            <div class="report-info"><div class="report-name">Escalation log</div><div class="report-desc">Full matched escalation list</div></div>
+
+            <button class="btn btn-sm" onclick="exportReport('escalations')"><i class="ti ti-download"></i> CSV</button>
+
+          </div>
+
+          <div class="report-item">
+
+            <div class="report-icon" style="background:var(--green-lt)"><i class="ti ti-file-spreadsheet" style="color:var(--green)"></i></div>
+
+            <div class="report-info"><div class="report-name">Full Excel workbook</div><div class="report-desc">All sheets in one .xlsx</div></div>
+
+            <button class="btn btn-sm btn-success" onclick="exportFullExcel()"><i class="ti ti-file-spreadsheet"></i> XLSX</button>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- ══ SCREEN: HISTORY ══ -->
+
+  <div class="screen" id="screen-history">
+
+    <div class="screen-body" style="max-width:700px">
+
+      <div class="chart-card">
+
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;gap:8px">
+
+          <div class="chart-card-title" style="margin:0">Upload history</div>
+
+          <button class="btn btn-sm" id="historyClearBtn" onclick="clearHistory()" style="display:none"><i class="ti ti-trash"></i> Clear all</button>
+
+        </div>
+
+        <div id="historyFull">
+
+          <div class="empty-state" style="padding:40px 0">
+
+            <i class="ti ti-database-off"></i>
+
+            <h3>No uploads yet</h3>
+
+            <p>Upload your first dataset to see it listed here</p>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- ══ SCREEN: SETTINGS ══ -->
+
+  <div class="screen" id="screen-settings">
+
+    <div class="screen-body">
+
+      <div class="settings-layout">
+
+        <div class="settings-nav">
+
+          <div class="s-nav-item active" onclick="switchSettingsTab('branding',this)">Branding</div>
+
+          <div class="s-nav-item" onclick="switchSettingsTab('general',this)">General</div>
+
+          <div class="s-nav-item" onclick="switchSettingsTab('thresholds',this)">Thresholds</div>
+
+          <div class="s-nav-item" onclick="switchSettingsTab('about',this)">About</div>
+
+        </div>
+
+        <div>
+
+          <!-- Branding -->
+
+          <div class="settings-section active" id="stab-branding">
+
+            <div class="settings-card">
+
+              <h4>App branding</h4>
+
+              <p>Customise the logo, app name and tagline shown in the sidebar.</p>
+
+              <div class="brand-preview">
+
+                <div class="bp-icon" id="brandPreviewIcon"><i class="ti ti-chart-dots"></i></div>
+
+                <div>
+
+                  <div style="font-size:14px;font-weight:600" id="brandPreviewName">DefectIQ</div>
+
+                  <div style="font-size:11px;color:var(--text3)" id="brandPreviewSub">Quality Analytics</div>
+
+                </div>
+
+              </div>
+
+              <div class="form-row">
+
+                <label>App name</label>
+
+                <input type="text" id="set-brandName" value="DefectIQ" oninput="saveSetting('brandName',this.value);applyBranding()">
+
+              </div>
+
+              <div class="form-row">
+
+                <label>Tagline</label>
+
+                <input type="text" id="set-brandSub" value="Quality Analytics" oninput="saveSetting('brandSub',this.value);applyBranding()">
+
+              </div>
+
+              <div class="form-row">
+
+                <label>Logo image</label>
+
+                <input type="file" id="set-brandLogoFile" accept="image/*" onchange="uploadImage(this,'brandLogo')">
+
+                <span class="hint">PNG, JPG or SVG. Square works best. Leave empty for default icon.</span>
+
+              </div>
+
+              <button class="btn btn-sm" onclick="clearImage('brandLogo')"><i class="ti ti-x"></i> Remove logo</button>
+
+            </div>
+
+            <div class="settings-card">
+
+              <h4>User profile</h4>
+
+              <p>Update the manager profile shown in the sidebar footer.</p>
+
+              <div class="brand-preview">
+
+                <div class="bp-icon" id="userPreviewAvatar" style="border-radius:50%;background:var(--blue-lt);color:var(--blue);font-weight:600;font-size:14px">GM</div>
+
+                <div>
+
+                  <div style="font-size:14px;font-weight:600" id="userPreviewName">General Manager</div>
+
+                  <div style="font-size:11px;color:var(--text3)" id="userPreviewRole">Operations Head</div>
+
+                </div>
+
+              </div>
+
+              <div class="form-row">
+
+                <label>Display name</label>
+
+                <input type="text" id="set-userName" value="General Manager" oninput="saveSetting('userName',this.value);applyBranding()">
+
+              </div>
+
+              <div class="form-row">
+
+                <label>Role / title</label>
+
+                <input type="text" id="set-userRole" value="Operations Head" oninput="saveSetting('userRole',this.value);applyBranding()">
+
+              </div>
+
+              <div class="form-row">
+
+                <label>Avatar image</label>
+
+                <input type="file" id="set-userAvatarFile" accept="image/*" onchange="uploadImage(this,'userAvatar')">
+
+                <span class="hint">PNG or JPG. Square works best.</span>
+
+              </div>
+
+              <button class="btn btn-sm" onclick="clearImage('userAvatar')"><i class="ti ti-x"></i> Remove avatar</button>
+
+            </div>
+
+          </div>
+
+          <!-- General -->
+
+          <div class="settings-section" id="stab-general">
+
+            <div class="settings-card">
+
+              <h4>Organisation</h4>
+
+              <p>Configure your organisation name and default view preferences.</p>
+
+              <div class="form-row">
+
+                <label>Organisation name</label>
+
+                <input type="text" id="set-orgName" value="Operations HQ" oninput="saveSetting('orgName',this.value)">
+
+              </div>
+
+              <div class="form-row">
+
+                <label>Default period view</label>
+
+                <select id="set-defaultPeriod" onchange="saveSetting('defaultPeriod',this.value)">
+
+                  <option value="monthly">Monthly</option>
+
+                  <option value="weekly">Weekly</option>
+
+                  <option value="quarterly">Quarterly</option>
+
+                  <option value="yearly">Yearly</option>
+
+                </select>
+
+              </div>
+
+            </div>
+
+          </div>
+
+          <!-- Thresholds -->
+
+          <div class="settings-section" id="stab-thresholds">
+
+            <div class="settings-card">
+
+              <h4>Defect ratio thresholds</h4>
+
+              <p>Configure when the dashboard shows amber and red alerts.</p>
+
+              <div class="form-row">
+
+                <label>Green threshold — on target (below this = green)</label>
+
+                <input type="number" id="set-tGreen" value="0.8" step="0.1" min="0" max="5" oninput="saveSetting('tGreen',+this.value)">
+
+              </div>
+
+              <div class="form-row">
+
+                <label>Amber threshold — at risk (below this = amber)</label>
+
+                <input type="number" id="set-tAmber" value="1.5" step="0.1" min="0" max="10" oninput="saveSetting('tAmber',+this.value)">
+
+              </div>
+
+            </div>
+
+          </div>
+
+          <!-- About -->
+
+          <div class="settings-section" id="stab-about">
+
+            <div class="settings-card">
+
+              <h4>DefectIQ</h4>
+
+              <p>Operations Quality Analytics — built for senior operations managers to track, analyse and report on booking defect ratios across departments, branches and time periods.</p>
+
+              <div style="font-size:12px;color:var(--text3);margin-top:8px">Version 2.0.0 · Streaming parser · Chart.js · PapaParse · SheetJS</div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+</div>
+
+<!-- Toast -->
+
+<div class="toast" id="toast"><i class="ti ti-check"></i><span id="toastMsg"></span></div>
+
+<!-- Analysis overlay -->
+
+<div class="overlay" id="overlay">
+
+  <div class="overlay-card">
+
+    <div style="display:flex;justify-content:center"><div class="spinner lg"></div></div>
+
+    <h3 id="overlayTitle">Analysing data…</h3>
+
+    <p id="overlaySub">Please keep this window open</p>
+
+    <div class="overlay-timer" id="overlayTimer">0.0s</div>
+
+    <div class="overlay-step" id="overlayStep">Preparing…</div>
+
+    <div class="overlay-mini-bar"><div class="overlay-mini-fill" id="overlayBar"></div></div>
+
+  </div>
+
+</div>
+
+<script>
+
+// ═══════════════════════════════════════════════════
+
+// STATE
+
+// ═══════════════════════════════════════════════════
+
+const S = {
+
+  files: { bookings: null, escalation: null },
+
+  analysed: null,
+
+  filtered: null,
+
+  period: 'monthly',
+
+  filters: { branch:'all', dept:'all', service:'all', submitter:'all', year:'all' },
+
+  settings: {
+
+    brandName:'DefectIQ', brandSub:'Quality Analytics', brandLogo:'',
+
+    userName:'General Manager', userRole:'Operations Head', userAvatar:'',
+
+    orgName:'Operations HQ', defaultPeriod:'monthly',
+
+    tGreen:0.8, tAmber:1.5, filePrefix:'defectiq_'
+
+  },
+
+  history: [],
+
+  maps: {}
+
+};
+
+let charts = {};
+
+// ═══════════════════════════════════════════════════
+
+// NAVIGATION
+
+// ═══════════════════════════════════════════════════
+
+const pageMeta = {
+
+  upload:      { title:'Upload data',        sub:'Import bookings & escalation files to begin analysis' },
+
+  dashboard:   { title:'Dashboard',          sub:'Overview of defect ratio across all dimensions' },
+
+  analysis:    { title:'Deep analysis',      sub:'Custom cross-dimensional analysis — mix any dimensions you need' },
+
+  escalations: { title:'Escalation log',     sub:'All matched escalation records — searchable and exportable' },
+
+  export:      { title:'Export reports',     sub:'Download analysis in CSV or Excel format' },
+
+  history:     { title:'Upload history',     sub:'Previously loaded datasets' },
+
+  settings:    { title:'Settings',           sub:'Branding, preferences and thresholds' },
+
+};
+
+function switchScreen(id, el) {
+
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+
+  const screen = document.getElementById('screen-' + id);
+
+  if (screen) screen.classList.add('active');
+
+  if (el) el.classList.add('active');
+
+  const m = pageMeta[id] || {};
+
+  document.getElementById('pageTitle').textContent = m.title || id;
+
+  document.getElementById('pageSubtitle').textContent = m.sub || '';
+
+  if (id === 'dashboard' && S.analysed) renderDashboard();
+
+  if (id === 'analysis' && S.analysed) renderAnalysis();
+
+  if (id === 'escalations' && S.analysed) renderEscalations();
+
+}
+
+// ═══════════════════════════════════════════════════
+
+// FILE HANDLING
+
+// ═══════════════════════════════════════════════════
+
+function triggerFileInput(type) { document.getElementById('input-' + type).click(); }
+
+function handleDragOver(e, slotId) { e.preventDefault(); document.getElementById(slotId).classList.add('dragover'); }
+
+function handleDragLeave(e, slotId) { document.getElementById(slotId).classList.remove('dragover'); }
+
+function handleDrop(e, type) {
+
+  e.preventDefault();
+
+  document.getElementById('slot-' + type).classList.remove('dragover');
+
+  const file = e.dataTransfer.files[0];
+
+  if (file) processFile(file, type);
+
+}
+
+function loadFileFromInput(input, type) {
+
+  if (input.files[0]) processFile(input.files[0], type);
+
+}
+
+function processFile(file, type) {
+
+  const ext = file.name.split('.').pop().toLowerCase();
+
+  const sizeMB = file.size / (1024 * 1024);
+
+  // No hard size cap. Only warn for very large XLSX which must be parsed in-memory.
+
+  if (['xlsx','xls'].includes(ext) && sizeMB > 150) {
+
+    showToast(`Large Excel file (${sizeMB.toFixed(0)} MB). For best performance, export as CSV and re-upload — Excel parsing for very large workbooks may take several minutes.`, 'warning');
+
+  }
+
+  showProgress(type, 0, 'Starting…');
+
+  const startTs = performance.now();
+
+  if (ext === 'csv') {
+
+    // Streaming CSV parse — never blocks the page, supports huge files
+
+    const rows = [];
+
+    let cols = null;
+
+    let bytesProcessed = 0;
+
+    Papa.parse(file, {
+
+      header: true,
+
+      skipEmptyLines: true,
+
+      worker: true,
+
+      chunkSize: 1024 * 1024 * 4, // 4MB chunks
+
+      chunk(results, parser) {
+
+        if (!cols) cols = results.meta.fields || [];
+
+        for (const r of results.data) rows.push(r);
+
+        bytesProcessed += results.meta.cursor || 0;
+
+        const pct = file.size ? Math.min(99, Math.round((results.meta.cursor / file.size) * 100)) : 50;
+
+        showProgress(type, pct, rows.length.toLocaleString() + ' rows · ' + ((performance.now()-startTs)/1000).toFixed(1) + 's');
+
+      },
+
+      complete() {
+
+        hideProgress(type);
+
+        storeFile(type, { name: file.name, rows, cols: cols || [], size: file.size });
+
+      },
+
+      error(err) {
+
+        hideProgress(type);
+
+        showToast('Failed to parse ' + file.name + ': ' + err.message, 'error');
+
+      }
+
+    });
+
+  } else if (['xlsx','xls'].includes(ext)) {
+
+    const reader = new FileReader();
+
+    reader.onprogress = e => {
+
+      if (e.lengthComputable) {
+
+        const pct = Math.round(e.loaded / e.total * 70);
+
+        showProgress(type, pct, 'Reading file… ' + ((performance.now()-startTs)/1000).toFixed(1) + 's');
+
+      }
+
+    };
+
+    reader.onload = e => {
+
+      showProgress(type, 75, 'Parsing workbook…');
+
+      // Yield to UI before sync XLSX parse
+
+      setTimeout(() => {
+
+        try {
+
+          const wb = XLSX.read(e.target.result, { type:'array', dense:true });
+
+          showProgress(type, 90, 'Extracting rows…');
+
+          setTimeout(() => {
+
+            const ws = wb.Sheets[wb.SheetNames[0]];
+
+            const rows = XLSX.utils.sheet_to_json(ws, { defval:'' });
+
+            const cols = rows.length ? Object.keys(rows[0]) : [];
+
+            hideProgress(type);
+
+            storeFile(type, { name: file.name, rows, cols, size: file.size });
+
+          }, 10);
+
+        } catch (err) {
+
+          hideProgress(type);
+
+          showToast('Failed to read Excel file: ' + err.message, 'error');
+
+        }
+
+      }, 10);
+
+    };
+
+    reader.onerror = () => { hideProgress(type); showToast('Failed to read file', 'error'); };
+
+    reader.readAsArrayBuffer(file);
+
+  } else {
+
+    hideProgress(type);
+
+    showToast('Unsupported format. Use CSV or XLSX.', 'error');
+
+  }
+
+}
+
+function storeFile(type, data) {
+
+  S.files[type] = data;
+
+  updateSlotUI(type, data);
+
+  showToast(`${data.name} loaded — ${data.rows.length.toLocaleString()} rows`, 'success');
+
+  if (S.files.bookings && S.files.escalation) showColMap();
+
+  document.getElementById('analyseBtn').style.display = (S.files.bookings && S.files.escalation) ? 'inline-flex' : 'none';
+
+}
+
+function updateSlotUI(type, data) {
+
+  const slot = document.getElementById('slot-' + type);
+
+  const label = document.getElementById('slot-' + type + '-label');
+
+  const sub = document.getElementById('slot-' + type + '-sub');
+
+  const action = document.getElementById('action-' + type);
+
+  slot.classList.add('loaded');
+
+  slot.onclick = null;
+
+  label.textContent = data.name;
+
+  sub.textContent = data.rows.length.toLocaleString() + ' rows · ' + formatBytes(data.size);
+
+  action.innerHTML = `<div style="display:flex;align-items:center;gap:6px">
+
+    <span class="badge badge-green"><i class="ti ti-check" style="font-size:11px"></i> Loaded</span>
+
+    <div class="file-remove" onclick="event.stopPropagation();removeFile('${type}')"><i class="ti ti-x"></i></div>
+
+  </div>`;
+
+}
+
+function removeFile(type) {
+
+  S.files[type] = null;
+
+  const slot = document.getElementById('slot-' + type);
+
+  const label = document.getElementById('slot-' + type + '-label');
+
+  const sub = document.getElementById('slot-' + type + '-sub');
+
+  const action = document.getElementById('action-' + type);
+
+  const input = document.getElementById('input-' + type);
+
+  // CRITICAL: reset the file input so re-selecting the same/new file fires onchange
+
+  if (input) input.value = '';
+
+  slot.classList.remove('loaded');
+
+  // Re-bind the click handler so the slot is clickable again
+
+  slot.onclick = () => triggerFileInput(type);
+
+  label.textContent = type === 'bookings' ? 'Bookings file' : 'Escalation report';
+
+  sub.textContent = 'Drag & drop or click · CSV, XLSX · any size';
+
+  action.innerHTML = `<div class="badge badge-gray"><i class="ti ti-upload" style="font-size:12px"></i> Upload</div>`;
+
+  document.getElementById('colMapCard').style.display = 'none';
+
+  document.getElementById('matchResult').style.display = 'none';
+
+  document.getElementById('analyseBtn').style.display = 'none';
+
+}
+
+function clearAll() {
+
+  ['bookings','escalation'].forEach(t => { if (S.files[t]) removeFile(t); });
+
+  S.analysed = null;
+
+  document.getElementById('colMapCard').style.display = 'none';
+
+}
+
+function showProgress(type, pct, msg) {
+
+  const p = document.getElementById('prog-' + type);
+
+  const f = document.getElementById('prog-' + type + '-fill');
+
+  const sub = document.getElementById('slot-' + type + '-sub');
+
+  if (!p) return;
+
+  p.style.display = 'block';
+
+  if (typeof pct === 'number') f.style.width = pct + '%';
+
+  if (msg && sub && !S.files[type]) sub.textContent = msg;
+
+}
+
+function hideProgress(type) {
+
+  const p = document.getElementById('prog-' + type);
+
+  const f = document.getElementById('prog-' + type + '-fill');
+
+  if (!p) return;
+
+  f.style.width = '100%';
+
+  setTimeout(() => { p.style.display = 'none'; f.style.width = '0%'; }, 300);
+
+}
+
+function formatBytes(b) {
+
+  if (b < 1024) return b + ' B';
+
+  if (b < 1048576) return (b/1024).toFixed(0) + ' KB';
+
+  if (b < 1073741824) return (b/1048576).toFixed(1) + ' MB';
+
+  return (b/1073741824).toFixed(2) + ' GB';
+
+}
+
+// ═══════════════════════════════════════════════════
+
+// COLUMN MAPPING
+
+// ═══════════════════════════════════════════════════
+
+function showColMap() {
+
+  document.getElementById('colMapCard').style.display = 'block';
+
+  const bkCols = S.files.bookings.cols;
+
+  const escCols = S.files.escalation.cols;
+
+  function populate(selId, cols, hints, optional) {
+
+    const sel = document.getElementById(selId);
+
+    sel.innerHTML = optional ? '<option value="">— none —</option>' : '';
+
+    cols.forEach(c => { const o = document.createElement('option'); o.value = c; o.textContent = c; sel.appendChild(o); });
+
+    const guess = cols.find(c => hints.some(h => c.toLowerCase().replace(/[^a-z]/g,'').includes(h)));
+
+    sel.value = guess || (optional ? '' : (cols[0] || ''));
+
+  }
+
+  populate('map-bkId',     bkCols,  ['reservationsid','reservationid','bookingid','resid']);
+
+  populate('map-bkDate',   bkCols,  ['voucherdate','bookingdate','createdate','date']);
+
+  populate('map-bkBranch', bkCols,  ['branch']);
+
+  populate('map-bkService',bkCols,  ['servicetype','service','type']);
+
+  populate('map-bkHotel',  bkCols,  ['hotel','property','hotelname','propertyname'], true);
+
+  populate('map-bkAmount', bkCols,  ['amount','basecurrency','value'], true);
+
+  populate('map-bkSupplier', bkCols, ['supplier','vendor','provider','suppliername','vendorname'], true);
+
+  populate('map-bkCity',    bkCols, ['city','location','locationcity','branchcity','departurecity','origincity','destinationcity'], true);
+
+  populate('map-escId',    escCols, ['bookingid','reservationid','resid']);
+
+  populate('map-escDate',  escCols, ['issuedate','escalationdate','dateofissue','raiseddate','reporteddate','createddate','date']);
+
+  populate('map-escIssue', escCols, ['typeofissue','issuetype','escalationtype','issue']);
+
+  populate('map-escDept',  escCols, ['department','dept','team']);
+
+  populate('map-escSubmitter', escCols, ['submittedby','submitter','raisedby','createdby','reportedby','user']);
+
+  populate('map-escService', escCols, ['servicetype','service','type'], true);
+
+  populate('map-escSupplier', escCols, ['supplier','vendor','provider','suppliername','vendorname'], true);
+
+  populate('map-escHotel', escCols, ['hotel','property','hotelname','propertyname'], true);
+
+  populate('map-escCity',  escCols, ['city','location','locationcity'], true);
+
+  checkMatch();
+
+  ['map-bkId','map-escId'].forEach(id => document.getElementById(id).onchange = checkMatch);
+
+}
+
+function checkMatch() {
+
+  if (!S.files.bookings || !S.files.escalation) return;
+
+  const bkId = document.getElementById('map-bkId').value;
+
+  const escId = document.getElementById('map-escId').value;
+
+  if (!bkId || !escId) return;
+
+  const bkSet = new Set(S.files.bookings.rows.map(r => String(r[bkId]||'').trim()));
+
+  const escIds = S.files.escalation.rows.map(r => String(r[escId]||'').trim()).filter(Boolean);
+
+  const matched = escIds.filter(id => bkSet.has(id)).length;
+
+  const pct = escIds.length ? Math.round(matched/escIds.length*100) : 0;
+
+  const el = document.getElementById('matchResult');
+
+  el.style.display = 'flex';
+
+  if (pct >= 90)      { el.className = 'match-result success'; el.innerHTML = `<i class="ti ti-circle-check"></i> ${matched} of ${escIds.length} escalation IDs matched (${pct}%) — ready to analyse`; }
+
+  else if (pct >= 50) { el.className = 'match-result warn';    el.innerHTML = `<i class="ti ti-alert-triangle"></i> ${matched} of ${escIds.length} matched (${pct}%) — check column mapping`; }
+
+  else                { el.className = 'match-result error';   el.innerHTML = `<i class="ti ti-circle-x"></i> Only ${matched} of ${escIds.length} matched (${pct}%) — columns may be incorrect`; }
+
+}
+
+// ═══════════════════════════════════════════════════
+
+// DATE & WEEK HELPERS (Monday-anchored, Mon–Sat working week)
+
+// ═══════════════════════════════════════════════════
+
+const MONTH_MAP = {jan:1,feb:2,mar:3,apr:4,may:5,jun:6,jul:7,aug:8,sep:9,sept:9,oct:10,nov:11,dec:12,
+
+  january:1,february:2,march:3,april:4,june:6,july:7,august:8,september:9,october:10,november:11,december:12};
+
+function parseDate(s, fmt) {
+
+  if (s == null || s === '') return null;
+
+  if (s instanceof Date) return isNaN(s) ? null : s;
+
+  if (typeof s === 'number' && s > 25569 && s < 100000) {
+
+    const d = new Date(Math.round((s - 25569) * 86400000));
+
+    return isNaN(d) ? null : d;
+
+  }
+
+  s = String(s).trim();
+
+  if (!s) return null;
+
+  // strip trailing time portion (e.g. "2026-06-08 14:35:00", "08/06/2026 14:35")
+
+  const sd = s.replace(/[T ]\d{1,2}:\d{2}(:\d{2})?(\s*[APap][Mm])?$/, '').trim();
+
+  fmt = fmt || (S && S.maps && S.maps.dateFmt) || 'auto';
+
+  // ISO YYYY-MM-DD
+
+  let m = sd.match(/^(\d{4})[-\/\.](\d{1,2})[-\/\.](\d{1,2})$/);
+
+  if (m) { const d = new Date(+m[1], +m[2]-1, +m[3]); if (!isNaN(d)) return d; }
+
+  // DD/MM/YYYY etc
+
+  m = sd.match(/^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{2,4})$/);
+
+  if (m) {
+
+    let a=+m[1], b=+m[2], y=+m[3]; if (y < 100) y += 2000;
+
+    let day, mo;
+
+    if (fmt === 'mdy')      { mo = a; day = b; }
+
+    else if (fmt === 'dmy') { day = a; mo = b; }
+
+    else if (fmt === 'ymd') { /* won't reach */ day = b; mo = a; }
+
+    else {
+
+      if (a > 12)      { day = a; mo = b; }
+
+      else if (b > 12) { mo = a; day = b; }
+
+      else             { day = a; mo = b; }
+
+    }
+
+    const d = new Date(y, mo-1, day);
+
+    if (!isNaN(d)) return d;
+
+  }
+
+  // DD-MMM-YYYY or DD MMM YYYY (e.g. 08-Jun-2026, 8 June 2026)
+
+  m = sd.match(/^(\d{1,2})[\s\-\/\.]([A-Za-z]{3,9})[\s\-\/\.](\d{2,4})$/);
+
+  if (m) {
+
+    const mo = MONTH_MAP[m[2].toLowerCase()];
+
+    if (mo) { let y=+m[3]; if (y<100) y+=2000; const d=new Date(y, mo-1, +m[1]); if (!isNaN(d)) return d; }
+
+  }
+
+  // MMM DD, YYYY  or  MMM DD YYYY
+
+  m = sd.match(/^([A-Za-z]{3,9})[\s\-\/\.]+(\d{1,2}),?\s*(\d{2,4})$/);
+
+  if (m) {
+
+    const mo = MONTH_MAP[m[1].toLowerCase()];
+
+    if (mo) { let y=+m[3]; if (y<100) y+=2000; const d=new Date(y, mo-1, +m[2]); if (!isNaN(d)) return d; }
+
+  }
+
+  // YYYY-MMM-DD
+
+  m = sd.match(/^(\d{4})[\s\-\/\.]([A-Za-z]{3,9})[\s\-\/\.](\d{1,2})$/);
+
+  if (m) {
+
+    const mo = MONTH_MAP[m[2].toLowerCase()];
+
+    if (mo) { const d=new Date(+m[1], mo-1, +m[3]); if (!isNaN(d)) return d; }
+
+  }
+
+  // Last-resort native parse
+
+  const d = new Date(s);
+
+  return isNaN(d) ? null : d;
+
+}
+
+// Normalise service-type labels so "Hotel" and "Hotel Bookings" collapse to one bucket.
+
+function normService(s) {
+
+  if (s == null) return 'Other';
+
+  let v = String(s).trim();
+
+  if (!v) return 'Other';
+
+  v = v.replace(/\s+bookings?$/i, '').trim();
+
+  // Title-case-ish: keep original casing but unify common variants
+
+  return v || 'Other';
+
+}
+
+function mondayOf(d) {
+
+  const x = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+
+  const dow = x.getDay(); // 0=Sun..6=Sat
+
+  // ISO-ish: Monday is start. Sunday rolls back to previous Monday (still part of prior work week).
+
+  const diff = dow === 0 ? -6 : 1 - dow;
+
+  x.setDate(x.getDate() + diff);
+
+  return x;
+
+}
+
+function ymd(d) {
+
+  const y = d.getFullYear();
+
+  const m = String(d.getMonth()+1).padStart(2,'0');
+
+  const day = String(d.getDate()).padStart(2,'0');
+
+  return `${y}-${m}-${day}`;
+
+}
+
+function shortDate(d) {
+
+  return d.toLocaleDateString('en-GB', { day:'2-digit', month:'short' });
+
+}
+
+function cleanBranch(b) {
+
+  // Keep every branch label exactly as it appears in the bookings file
+
+  // (no merging — e.g. "UAE XML Clients", "UAE XML Hub Dubai Billing" and
+
+  // "United Arab Emirates" must remain separate buckets).
+
+  if (b === null || b === undefined) return 'Unknown';
+
+  const s = String(b).replace(/\s+/g, ' ').trim();
+
+  return s || 'Unknown';
+
+}
+
+// ═══════════════════════════════════════════════════
+
+// ANALYSIS ENGINE (chunked + overlay timer)
+
+// ═══════════════════════════════════════════════════
+
+let overlayState = { running:false, start:0, raf:0 };
+
+function showOverlay(title, sub) {
+
+  document.getElementById('overlayTitle').textContent = title || 'Analysing data…';
+
+  document.getElementById('overlaySub').textContent = sub || 'Please keep this window open';
+
+  document.getElementById('overlayStep').textContent = 'Starting…';
+
+  document.getElementById('overlayBar').style.width = '0%';
+
+  document.getElementById('overlayTimer').textContent = '0.0s';
+
+  document.getElementById('overlay').classList.add('show');
+
+  overlayState.running = true;
+
+  overlayState.start = performance.now();
+
+  const tick = () => {
+
+    if (!overlayState.running) return;
+
+    const s = (performance.now() - overlayState.start) / 1000;
+
+    document.getElementById('overlayTimer').textContent = s.toFixed(1) + 's';
+
+    overlayState.raf = requestAnimationFrame(tick);
+
+  };
+
+  tick();
+
+}
+
+function setOverlayStep(msg, pct) {
+
+  document.getElementById('overlayStep').textContent = msg;
+
+  if (typeof pct === 'number') document.getElementById('overlayBar').style.width = pct + '%';
+
+}
+
+function hideOverlay() {
+
+  overlayState.running = false;
+
+  cancelAnimationFrame(overlayState.raf);
+
+  document.getElementById('overlay').classList.remove('show');
+
+}
+
+function runAnalysis() {
+
+  const map = {
+
+    dateFmt:  (document.getElementById('map-dateFmt')||{}).value || 'auto',
+
+    bkId:     document.getElementById('map-bkId').value,
+
+    bkDate:   document.getElementById('map-bkDate').value,
+
+    bkBranch: document.getElementById('map-bkBranch').value,
+
+    bkService:document.getElementById('map-bkService').value,
+
+    bkHotel:  document.getElementById('map-bkHotel').value,
+
+    bkAmount: document.getElementById('map-bkAmount').value,
+
+    bkSupplier: (document.getElementById('map-bkSupplier')||{}).value || '',
+
+    bkCity: (document.getElementById('map-bkCity')||{}).value || '',
+
+    escId:    document.getElementById('map-escId').value,
+
+    escDate:  document.getElementById('map-escDate').value,
+
+    escIssue: document.getElementById('map-escIssue').value,
+
+    escDept:  document.getElementById('map-escDept').value,
+
+    escSubmitter: document.getElementById('map-escSubmitter').value,
+
+    escService: document.getElementById('map-escService').value,
+
+    escSupplier: document.getElementById('map-escSupplier').value,
+
+    escHotel: document.getElementById('map-escHotel').value,
+
+    escCity: (document.getElementById('map-escCity')||{}).value || ''
+
+  };
+
+  S.maps = map;
+
+  const fmt = map.dateFmt;
+
+  showOverlay('Running analysis…', `${S.files.bookings.rows.length.toLocaleString()} bookings · ${S.files.escalation.rows.length.toLocaleString()} escalations`);
+
+  setOverlayStep('Indexing escalations…', 5);
+
+  setTimeout(() => {
+
+    const escMap = new Map();
+
+    S.files.escalation.rows.forEach(r => {
+
+      const id = String(r[map.escId]||'').trim();
+
+      if (id) escMap.set(id, {
+
+        issue: String(r[map.escIssue]||'Unknown').trim() || 'Unknown',
+
+        dept:  map.escDept ? String(r[map.escDept]||'').trim() : '',
+
+        submitter: map.escSubmitter ? String(r[map.escSubmitter]||'').trim() : '',
+
+        hotel: map.escHotel ? String(r[map.escHotel]||'').trim() : '',
+
+        service: map.escService ? normService(r[map.escService]) : '',
+
+        supplier: map.escSupplier ? String(r[map.escSupplier]||'').trim() : '',
+
+        city: map.escCity ? String(r[map.escCity]||'').trim() : '',
+
+        issueDate: map.escDate ? parseDate(r[map.escDate], fmt) : null
+
+      });
+
+    });
+
+    setOverlayStep('Processing bookings…', 15);
+
+    const bk = S.files.bookings.rows;
+
+    const total = bk.length;
+
+    const out = new Array(total);
+
+    const CHUNK = 5000;
+
+    let i = 0;
+
+    const diag = {
+
+      totalRaw: total,
+
+      unparsedDates: [],   // {srno, raw}
+
+      missingIds: 0,
+
+      duplicateIds: new Map(), // id -> count
+
+      idFirstIndex: new Map(),
+
+      unmatchedEscIds: []
+
+    };
+
+    function chunk() {
+
+      const end = Math.min(i + CHUNK, total);
+
+      for (; i < end; i++) {
+
+        const r = bk[i];
+
+        const id = String(r[map.bkId]||'').trim();
+
+        const escData = escMap.get(id) || null;
+
+        const bkDt = parseDate(r[map.bkDate], fmt);
+
+        if (!bkDt && diag.unparsedDates.length < 1000) {
+
+          diag.unparsedDates.push({ srno: r['Sr.No.']||r['SrNo']||(i+1), raw: String(r[map.bkDate]||'') });
+
+        }
+
+        if (!id) diag.missingIds++;
+
+        else {
+
+          if (diag.idFirstIndex.has(id)) diag.duplicateIds.set(id, (diag.duplicateIds.get(id)||1)+1);
+
+          else diag.idFirstIndex.set(id, i);
+
+        }
+
+        // Trend bucketing always uses booking date so escalation count and booking denominator
+
+        // line up per period. Issue date is kept separately for the Escalation Log.
+
+        const dt = bkDt;
+
+        const escDt = escData ? escData.issueDate : null;
+
+        const branch = cleanBranch(r[map.bkBranch]||'');
+
+        const service = normService(r[map.bkService]);
+
+        const escService = escData ? (escData.service || '') : '';
+
+        const amount = map.bkAmount ? (parseFloat(r[map.bkAmount])||0) : 0;
+
+        const bkSupplier = map.bkSupplier ? String(r[map.bkSupplier]||'').trim() : '';
+
+        const hotelB = map.bkHotel ? String(r[map.bkHotel]||'').trim() : '';
+
+        const hotel = (escData && escData.hotel) || hotelB || '';
+
+        const supplier = bkSupplier || (escData ? (escData.supplier || '') : '');
+
+        const bkCity = map.bkCity ? String(r[map.bkCity]||'').trim() : '';
+
+        const city = bkCity || (escData ? (escData.city || '') : '');
+
+        const mon = dt ? mondayOf(dt) : null;
+
+        out[i] = {
+
+          id, dt, bkDt, escDt, branch, service, bkService: service, escService, amount,
+
+          isEsc: escData ? 1 : 0,
+
+          issue: escData ? escData.issue : '',
+
+          dept:  escData ? escData.dept  : '',
+
+          submitter: escData ? escData.submitter : '',
+
+          supplier,
+
+          hotel,
+
+          city,
+
+          status: String(r['Status']||r['status']||'').trim(),
+
+          year:  dt ? dt.getFullYear() : 0,
+
+          month: dt ? dt.getMonth()+1  : 0,
+
+          weekKey: mon ? ymd(mon) : '',
+
+          weekLabel: mon ? shortDate(mon) : '',
+
+          qtr:   dt ? 'Q'+Math.ceil((dt.getMonth()+1)/3) : 'Unknown',
+
+          monthLabel: dt ? dt.toLocaleString('en',{month:'short',year:'numeric'}) : 'Unknown'
+
+        };
+
+      }
+
+      const pct = 15 + Math.round((i/total) * 75);
+
+      setOverlayStep(`Processing rows… ${i.toLocaleString()} / ${total.toLocaleString()}`, pct);
+
+      if (i < total) {
+
+        setTimeout(chunk, 0);
+
+      } else {
+
+        // build unmatched escalation list
+
+        const bkIds = new Set(out.map(r => r.id).filter(Boolean));
+
+        escMap.forEach((_v, k) => { if (!bkIds.has(k)) diag.unmatchedEscIds.push(k); });
+
+        finish(out, diag);
+
+      }
+
+    }
+
+    function finish(rows, diag) {
+
+      setOverlayStep('Finalising…', 95);
+
+      setTimeout(() => {
+
+        const matched = rows.reduce((n,r) => n + r.isEsc, 0);
+
+        S.analysed = { rows, matched, diag, bkFile: S.files.bookings.name, escFile: S.files.escalation.name, loadedAt: new Date() };
+
+        addToHistory({ bkFile: S.files.bookings.name, escFile: S.files.escalation.name, total: rows.length, matched, loadedAt: new Date() });
+
+        populateFilters(rows);
+
+        applyFilters();
+
+        document.getElementById('esc-badge').style.display = 'inline-block';
+
+        document.getElementById('esc-badge').textContent = matched;
+
+        document.getElementById('esc-badge').className = 'nav-badge ok';
+
+        document.getElementById('lastUpdated').style.display = 'block';
+
+        document.getElementById('lastUpdated').textContent = 'Loaded: ' + new Date().toLocaleTimeString();
+
+        const elapsed = ((performance.now() - overlayState.start)/1000).toFixed(1);
+
+        hideOverlay();
+
+        showToast(`Analysis complete in ${elapsed}s — ${rows.length.toLocaleString()} bookings, ${matched} escalations`, 'success');
+
+        switchScreen('dashboard', document.querySelector('[data-screen=dashboard]'));
+
+      }, 30);
+
+    }
+
+    chunk();
+
+  }, 30);
+
+}
+
+function populateFilters(rows) {
+
+  const branches = [...new Set(rows.map(r => r.branch))].filter(Boolean).sort();
+
+  const depts    = [...new Set(rows.filter(r=>r.isEsc).map(r => r.dept))].filter(Boolean).sort();
+
+  const services = [...new Set(rows.map(r => r.service))].filter(Boolean).sort();
+
+  const submitters = [...new Set(rows.filter(r=>r.isEsc).map(r => r.submitter))].filter(Boolean).sort();
+
+  const cities   = [...new Set(rows.map(r => r.city).filter(Boolean))].sort();
+
+  const years    = [...new Set(rows.map(r => r.year).filter(y => y > 0))].sort();
+
+  // Months present in data (unique month numbers 1-12)
+
+  const monthsSet = [...new Set(rows.filter(r=>r.year>0 && r.month>0).map(r=>r.month))].sort((a,b)=>a-b);
+
+  const MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+  function fill(id, items, labelFn) {
+
+    const sel = document.getElementById(id); if (!sel) return;
+
+    const cur = sel.value;
+
+    while (sel.options.length > 1) sel.remove(1);
+
+    items.forEach(v => { const o = document.createElement('option'); o.value = v; o.textContent = labelFn ? labelFn(v) : v; sel.appendChild(o); });
+
+    sel.value = cur;
+
+  }
+
+  fill('flt-branch', branches);
+
+  fill('flt-dept',   depts);
+
+  fill('flt-service',services);
+
+  fill('flt-submitter', submitters);
+
+  fill('flt-city',   cities);
+
+  fill('flt-year',   years);
+
+  // Show month filter only when data spans more than one month
+
+  const monthSel = document.getElementById('flt-month');
+
+  if (monthSel) {
+
+    fill('flt-month', monthsSet, m => MONTH_NAMES[m-1]);
+
+    monthSel.style.display = monthsSet.length > 1 ? '' : 'none';
+
+  }
+
+  fill('escBranchFlt', branches);
+
+  const issues = [...new Set(rows.filter(r=>r.isEsc).map(r=>r.issue))].filter(Boolean).sort();
+
+  fill('escIssueFlt', issues);
+
+  const suppliers = [...new Set(rows.filter(r=>r.isEsc).map(r=>r.supplier).filter(Boolean))].sort();
+
+  fill('escSupplierFlt', suppliers);
+
+  fill('escCityFlt', cities);
+
+  const statuses = [...new Set(rows.map(r=>r.status))].filter(Boolean).sort();
+
+  fill('escStatusFlt', statuses);
+
+}
+
+function applyFilters() {
+
+  if (!S.analysed) return;
+
+  const f = {
+
+    branch:  document.getElementById('flt-branch').value,
+
+    dept:    document.getElementById('flt-dept').value,
+
+    service: document.getElementById('flt-service').value,
+
+    submitter: document.getElementById('flt-submitter').value,
+
+    city:    (document.getElementById('flt-city')||{}).value || 'all',
+
+    year:    document.getElementById('flt-year').value,
+
+    month:   (document.getElementById('flt-month')||{}).value || 'all'
+
+  };
+
+  S.filters = f;
+
+  // Booking-level filters (branch, service, city, year, month) restrict the booking universe (denominator).
+
+  // Escalation-only filters (dept, submitter) only suppress non-matching escalations — they must
+
+  // never drop bookings, otherwise DR collapses to 100% (escalations == bookings).
+
+  S.filtered = S.analysed.rows.filter(r =>
+
+    (f.branch  === 'all' || r.branch  === f.branch)  &&
+
+    (f.service === 'all' || r.service === f.service) &&
+
+    (f.city    === 'all' || r.city    === f.city)    &&
+
+    (f.year    === 'all' || String(r.year) === String(f.year)) &&
+
+    (f.month   === 'all' || String(r.month) === String(f.month))
+
+  );
+
+  // Escalation-only filters (dept, submitter) must NEVER drop rows — they only
+
+  // demote non-matching escalations to plain bookings. This keeps "Total bookings"
+
+  // identical across dept selections (point: dept toggle should not change bookings).
+
+  if (f.dept !== 'all' || f.submitter !== 'all') {
+
+    S.filtered = S.filtered.map(r => {
+
+      if (!r.isEsc) return r;
+
+      const keepDept = f.dept === 'all' || r.dept === f.dept;
+
+      const keepSub  = f.submitter === 'all' || r.submitter === f.submitter;
+
+      return (keepDept && keepSub) ? r : { ...r, isEsc: 0, issue: '', dept: '', submitter: '' };
+
+    });
+
+  }
+
+  renderDashboard();
+
+}
+
+function resetFilters() {
+
+  ['flt-branch','flt-dept','flt-service','flt-submitter','flt-city','flt-year','flt-month'].forEach(id => { const el=document.getElementById(id); if(el) el.value = 'all'; });
+
+  applyFilters();
+
+}
+
+function setPeriod(p, el) {
+
+  S.period = p;
+
+  document.querySelectorAll('.period-tab').forEach(t => t.classList.remove('active'));
+
+  el.classList.add('active');
+
+  if (S.filtered) renderDashboard();
+
+}
+
+// ═══════════════════════════════════════════════════
+
+// DASHBOARD RENDERING
+
+// ═══════════════════════════════════════════════════
+
+function drClass(dr) { const {tGreen:g, tAmber:a} = S.settings; return dr > a ? 'danger' : dr > g ? 'warn' : 'ok'; }
+
+function drColor(dr) { const {tGreen:g, tAmber:a} = S.settings; return dr > a ? '#B91C1C' : dr > g ? '#D97706' : '#15803D'; }
+
+function drBadge(dr) { const {tGreen:g, tAmber:a} = S.settings; return dr > a ? 'badge-red' : dr > g ? 'badge-amber' : 'badge-green'; }
+
+function getTrendData(rows) {
+
+  const p = S.period;
+
+  let keyFn, sortFn, labelFn;
+
+  if (p === 'weekly') {
+
+    keyFn = r => r.weekKey || null;
+
+    labelFn = k => { const [y,m,d] = k.split('-'); return d+' '+['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][+m]; };
+
+    sortFn = (a,b) => a.localeCompare(b);
+
+  } else if (p === 'monthly') {
+
+    keyFn = r => r.year > 0 ? r.year + '-' + String(r.month).padStart(2,'0') : null;
+
+    labelFn = k => { const [y,m] = k.split('-'); return ['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][+m]+' '+y.slice(2); };
+
+    sortFn = (a,b) => a.localeCompare(b);
+
+  } else if (p === 'quarterly') {
+
+    keyFn = r => r.year > 0 ? r.year + '-' + r.qtr : null;
+
+    labelFn = k => k.replace('-',' ');
+
+    sortFn = (a,b) => a.localeCompare(b);
+
+  } else {
+
+    keyFn = r => r.year > 0 ? String(r.year) : null;
+
+    labelFn = k => k;
+
+    sortFn = (a,b) => +a - +b;
+
+  }
+
+  const m = new Map();
+
+  rows.forEach(r => {
+
+    const k = keyFn(r); if (!k) return;
+
+    if (!m.has(k)) m.set(k, { bk:0, esc:0 });
+
+    const v = m.get(k); v.bk++; if (r.isEsc) v.esc++;
+
+  });
+
+  return [...m.keys()].sort(sortFn).map(k => {
+
+    const v = m.get(k);
+
+    return { label: labelFn(k), key: k, bk: v.bk, esc: v.esc, dr: v.bk ? +(v.esc/v.bk*100).toFixed(3) : 0 };
+
+  });
+
+}
+
+function renderDashboard() {
+
+  if (!S.filtered) return;
+
+  const rows = S.filtered;
+
+  const esc = rows.filter(r => r.isEsc);
+
+  const total = rows.length, escCnt = esc.length;
+
+  const dr = total ? +(escCnt/total*100).toFixed(3) : 0;
+
+  document.getElementById('kpiGrid').innerHTML = `
+
+    <div class="kpi-card ${drClass(dr)}">
+
+      <div class="kpi-label"><i class="ti ti-percentage"></i>Overall defect ratio</div>
+
+      <div class="kpi-value">${dr}%</div>
+
+      <div class="kpi-sub">Target ≤ ${S.settings.tGreen}%</div>
+
+    </div>
+
+    <div class="kpi-card">
+
+      <div class="kpi-label"><i class="ti ti-file-text"></i>Total bookings</div>
+
+      <div class="kpi-value">${total.toLocaleString()}</div>
+
+      <div class="kpi-sub">In current selection</div>
+
+    </div>
+
+    <div class="kpi-card warn">
+
+      <div class="kpi-label"><i class="ti ti-alert-hexagon"></i>Escalations</div>
+
+      <div class="kpi-value">${escCnt.toLocaleString()}</div>
+
+      <div class="kpi-sub">${S.analysed.matched.toLocaleString()} total matched</div>
+
+    </div>
+
+    <div class="kpi-card info">
+
+      <div class="kpi-label"><i class="ti ti-map-pin"></i>Branches tracked</div>
+
+      <div class="kpi-value">${new Set(rows.map(r=>r.branch)).size}</div>
+
+      <div class="kpi-sub">Departments: ${new Set(esc.map(r=>r.dept).filter(Boolean)).size}</div>
+
+    </div>`;
+
+  renderTrendChart(getTrendData(rows));
+
+  renderBranchTable();
+
+  renderIssueChart(esc);
+
+  renderDeptChart(rows);
+
+  renderSubmitterChart(esc);
+
+  renderTopHotels(esc);
+
+  renderDataQualityBar();
+
+}
+
+function renderDataQualityBar() {
+
+  const d = S.analysed && S.analysed.diag; if (!d) return;
+
+  const bar = document.getElementById('dqBar');
+
+  const dupGroups = d.duplicateIds.size;
+
+  const dupExtra = [...d.duplicateIds.values()].reduce((a,b)=>a+(b-1),0);
+
+  const issues = (d.unparsedDates.length>0?1:0) + (dupGroups>0?1:0) + (d.missingIds>0?1:0) + (d.unmatchedEscIds.length>0?1:0);
+
+  if (!issues) { bar.style.display='none'; return; }
+
+  bar.style.display='block';
+
+  const parts = [];
+
+  if (d.unparsedDates.length) parts.push(`<strong>${d.unparsedDates.length.toLocaleString()}</strong> rows with unparseable dates`);
+
+  if (dupGroups) parts.push(`<strong>${dupGroups.toLocaleString()}</strong> duplicate ID groups (${dupExtra} extra rows)`);
+
+  if (d.missingIds) parts.push(`<strong>${d.missingIds.toLocaleString()}</strong> rows missing booking ID`);
+
+  if (d.unmatchedEscIds.length) parts.push(`<strong>${d.unmatchedEscIds.length.toLocaleString()}</strong> escalations with no matching booking`);
+
+  document.getElementById('dqSummary').innerHTML = '<i class="ti ti-alert-triangle"></i> ' + parts.join(' · ');
+
+}
+
+function openDataQuality() {
+
+  const d = S.analysed && S.analysed.diag; if (!d) return;
+
+  const panel = document.getElementById('dqPanel');
+
+  const c = document.getElementById('dqContent');
+
+  const dupRows = [...d.duplicateIds.entries()].sort((a,b)=>b[1]-a[1]);
+
+  const esc = (s)=> String(s==null?'':s).replace(/[&<>"]/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[m]));
+
+  const sec = (title, body) => `<div style="margin:14px 0"><div style="font-weight:600;margin-bottom:6px">${title}</div>${body}</div>`;
+
+  let html = `<div style="color:var(--text2);margin-bottom:8px">File: <strong>${esc(S.analysed.bkFile)}</strong> · Raw rows processed: <strong>${d.totalRaw.toLocaleString()}</strong></div>`;
+
+  html += sec(`Duplicate booking IDs — ${dupRows.length.toLocaleString()} groups (${dupRows.reduce((a,b)=>a+b[1]-1,0)} extra rows)`,
+
+    dupRows.length
+
+      ? `<div style="max-height:240px;overflow:auto;border:1px solid var(--border);border-radius:6px">
+
+           <table style="width:100%;font-size:12px;border-collapse:collapse">
+
+             <thead style="background:var(--surface2);position:sticky;top:0"><tr><th style="text-align:left;padding:6px 10px">Booking ID</th><th style="text-align:right;padding:6px 10px">Occurrences</th></tr></thead>
+
+             <tbody>${dupRows.slice(0,500).map(([k,v])=>`<tr><td style="padding:5px 10px;border-top:1px solid var(--border);font-family:monospace">${esc(k)}</td><td style="padding:5px 10px;border-top:1px solid var(--border);text-align:right">${v}</td></tr>`).join('')}</tbody>
+
+           </table>
+
+         </div>
+
+         <button class="btn btn-sm" style="margin-top:8px" onclick="downloadDQ('duplicates')"><i class="ti ti-download"></i> Download CSV</button>`
+
+      : '<div style="color:var(--text3)">None ✓</div>');
+
+  html += sec(`Unparseable date rows — ${d.unparsedDates.length.toLocaleString()}`,
+
+    d.unparsedDates.length
+
+      ? `<div style="max-height:200px;overflow:auto;border:1px solid var(--border);border-radius:6px">
+
+           <table style="width:100%;font-size:12px;border-collapse:collapse">
+
+             <thead style="background:var(--surface2);position:sticky;top:0"><tr><th style="text-align:left;padding:6px 10px">Sr.No.</th><th style="text-align:left;padding:6px 10px">Raw date value</th></tr></thead>
+
+             <tbody>${d.unparsedDates.slice(0,500).map(r=>`<tr><td style="padding:5px 10px;border-top:1px solid var(--border)">${esc(r.srno)}</td><td style="padding:5px 10px;border-top:1px solid var(--border);font-family:monospace">${esc(r.raw)||'<em>(empty)</em>'}</td></tr>`).join('')}</tbody>
+
+           </table>
+
+         </div>
+
+         <div style="font-size:12px;color:var(--text3);margin-top:6px">Tip: re-upload with an explicit Date Format (DMY / MDY / ISO) in the mapping panel.</div>
+
+         <button class="btn btn-sm" style="margin-top:8px" onclick="downloadDQ('unparsed')"><i class="ti ti-download"></i> Download CSV</button>`
+
+      : '<div style="color:var(--text3)">None ✓</div>');
+
+  html += sec(`Escalations with no matching booking — ${d.unmatchedEscIds.length.toLocaleString()}`,
+
+    d.unmatchedEscIds.length
+
+      ? `<div style="max-height:200px;overflow:auto;border:1px solid var(--border);border-radius:6px;padding:8px;font-family:monospace;font-size:12px">${d.unmatchedEscIds.slice(0,500).map(esc).join('<br>')}</div>
+
+         <button class="btn btn-sm" style="margin-top:8px" onclick="downloadDQ('unmatched')"><i class="ti ti-download"></i> Download CSV</button>`
+
+      : '<div style="color:var(--text3)">All escalations matched ✓</div>');
+
+  if (d.missingIds) html += sec('Bookings without ID', `<div style="color:var(--text2)">${d.missingIds.toLocaleString()} rows have an empty booking-ID column and cannot be matched to escalations.</div>`);
+
+  c.innerHTML = html;
+
+  panel.style.display = 'block';
+
+  panel.scrollIntoView({behavior:'smooth', block:'start'});
+
+}
+
+function downloadDQ(kind) {
+
+  const d = S.analysed.diag;
+
+  let csv = '', name = 'data-quality-'+kind+'.csv';
+
+  if (kind === 'duplicates') {
+
+    csv = 'Booking ID,Occurrences\n' + [...d.duplicateIds.entries()].map(([k,v])=>`"${k}",${v}`).join('\n');
+
+  } else if (kind === 'unparsed') {
+
+    csv = 'Sr.No.,Raw Date\n' + d.unparsedDates.map(r=>`"${r.srno}","${String(r.raw).replace(/"/g,'""')}"`).join('\n');
+
+  } else if (kind === 'unmatched') {
+
+    csv = 'Escalation Booking ID\n' + d.unmatchedEscIds.map(x=>`"${x}"`).join('\n');
+
+  }
+
+  const blob = new Blob([csv], {type:'text/csv'});
+
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; a.click();
+
+  setTimeout(()=>URL.revokeObjectURL(a.href), 1000);
+
+}
+
+function renderTrendChart(trend) {
+
+  destroyChart('trendChart');
+
+  const labels = trend.map(r => r.label);
+
+  const drVals = trend.map(r => r.dr);
+
+  const escVals = trend.map(r => r.esc);
+
+  const maxDR = Math.max(...drVals, S.settings.tGreen) || 1;
+
+  const maxBk = Math.max(...trend.map(r => r.bk)) || 1;
+
+  const bkScaled = trend.map(r => +(r.bk/maxBk*maxDR*0.8).toFixed(3));
+
+  charts.trendChart = new Chart(document.getElementById('trendChart'), {
+
+    data: {
+
+      labels,
+
+      datasets: [
+
+        { type:'bar',  label:'Bookings (scaled)', data:bkScaled, backgroundColor:'rgba(209,213,219,0.55)', borderRadius:3, yAxisID:'y', order:3 },
+
+        { type:'line', label:'DR %',     data:drVals, borderColor:'#1D4ED8', backgroundColor:'rgba(29,78,216,0.08)', fill:true, tension:0.3, pointRadius:4, pointHoverRadius:6, borderWidth:2, yAxisID:'y', order:1 },
+
+        { type:'line', label:'Target',   data:trend.map(()=>S.settings.tGreen), borderColor:'#EF4444', borderDash:[5,3], pointRadius:0, borderWidth:1.5, fill:false, yAxisID:'y', order:0 },
+
+        { type:'line', label:'Escalations', data:escVals, borderColor:'#F59E0B', backgroundColor:'rgba(245,158,11,0.08)', tension:0.3, pointRadius:3, pointHoverRadius:5, borderWidth:2, fill:false, yAxisID:'y2', order:2 }
+
+      ]
+
+    },
+
+    options: {
+
+      responsive:true, maintainAspectRatio:false,
+
+      interaction:{ mode:'index', intersect:false },
+
+      plugins:{ legend:{
+
+        display:true,
+
+        position:'top',
+
+        align:'end',
+
+        labels:{ font:{size:10}, boxWidth:12, padding:10,
+
+          generateLabels: chart => chart.data.datasets.map((ds, i) => ({
+
+            text: ds.label,
+
+            fillStyle: ds.borderColor || ds.backgroundColor,
+
+            strokeStyle: ds.borderColor || ds.backgroundColor,
+
+            lineWidth: 2,
+
+            hidden: !chart.isDatasetVisible(i),
+
+            datasetIndex: i
+
+          }))
+
+        }
+
+      }, tooltip:{ callbacks:{
+
+        label: c => {
+
+          if (c.dataset.label === 'Bookings (scaled)') return 'Bookings: ' + (trend[c.dataIndex]?.bk||0).toLocaleString();
+
+          if (c.dataset.label === 'Escalations') return 'Escalations: ' + (trend[c.dataIndex]?.esc||0).toLocaleString();
+
+          return c.dataset.label + ': ' + (+c.raw).toFixed(3) + '%';
+
+        }
+
+      }}},
+
+      scales:{
+
+        x:{ ticks:{font:{size:11},maxRotation:40,autoSkip:true}, grid:{display:false} },
+
+        y:{ position:'left', ticks:{callback:v=>v.toFixed(2)+'%',font:{size:11}}, grid:{color:'rgba(0,0,0,0.04)'} },
+
+        y2:{ position:'right', ticks:{font:{size:11},precision:0,color:'#F59E0B'}, grid:{drawOnChartArea:false}, title:{display:true,text:'Escalations',font:{size:10},color:'#F59E0B'} }
+
+      }
+
+    }
+
+  });
+
+  const titleEl = document.getElementById('trendChartTitle');
+
+  const subEl = document.getElementById('trendChartSub');
+
+  titleEl.textContent = 'Defect ratio trend — ' + S.period;
+
+  subEl.textContent = S.period === 'weekly' ? 'Week starting Monday · Mon–Sat working week' : `${S.period[0].toUpperCase()+S.period.slice(1)} DR % vs ${S.settings.tGreen}% target`;
+
+}
+
+function renderBranchTable() {
+
+  if (!S.filtered) return;
+
+  const m = new Map();
+
+  S.filtered.forEach(r => {
+
+    if (!m.has(r.branch)) m.set(r.branch, {bk:0,esc:0});
+
+    const v = m.get(r.branch); v.bk++; if (r.isEsc) v.esc++;
+
+  });
+
+  let arr = [...m.entries()].map(([b,v]) => ({b, bk:v.bk, esc:v.esc, dr:v.bk?+(v.esc/v.bk*100).toFixed(3):0})).filter(x=>x.bk>0);
+
+  const sort = document.getElementById('branchSort').value;
+
+  if (sort==='dr_desc')      arr.sort((a,b)=>b.dr-a.dr);
+
+  else if (sort==='dr_asc')  arr.sort((a,b)=>a.dr-b.dr);
+
+  else if (sort==='bk_desc') arr.sort((a,b)=>b.bk-a.bk);
+
+  else                       arr.sort((a,b)=>b.esc-a.esc);
+
+  const maxDR = arr[0]?.dr || 1;
+
+  let h = `<table class="data-table"><thead><tr><th>Branch</th><th>Bookings</th><th>Escalations</th><th>DR</th><th style="min-width:100px">Bar</th></tr></thead><tbody>`;
+
+  arr.forEach(x => {
+
+    const pct = (x.dr/maxDR*100).toFixed(1);
+
+    h += `<tr><td style="font-weight:500">${escapeHtml(x.b)}</td><td>${x.bk.toLocaleString()}</td><td>${x.esc}</td>
+
+      <td><span class="badge ${drBadge(x.dr)}">${x.dr}%</span></td>
+
+      <td><div class="mini-bar-wrap"><div class="mini-bar-val" style="width:${pct}%;background:${drColor(x.dr)}"></div></div></td></tr>`;
+
+  });
+
+  h += '</tbody></table>';
+
+  document.getElementById('branchTableWrap').innerHTML = h;
+
+}
+
+function renderIssueChart(esc) {
+
+  destroyChart('issueChart');
+
+  const m = new Map();
+
+  esc.forEach(r => { const k = r.issue || 'Unknown'; m.set(k, (m.get(k)||0)+1); });
+
+  const arr = [...m.entries()].sort((a,b)=>b[1]-a[1]).slice(0,10);
+
+  const total = esc.length || 1;
+
+  const labels = arr.map(([k]) => k.length > 32 ? k.slice(0,30)+'…' : k);
+
+  const data = arr.map(([,v]) => v);
+
+  const palette = ['#1D4ED8','#EF4444','#D97706','#15803D','#7C3AED','#DB2777','#0891B2','#EA580C','#0D9488','#374151'];
+
+  charts.issueChart = new Chart(document.getElementById('issueChart'), {
+
+    type:'bar',
+
+    data:{ labels, datasets:[{ label:'Escalations', data, backgroundColor:labels.map((_,i)=>palette[i%palette.length]+'CC'), borderColor:labels.map((_,i)=>palette[i%palette.length]), borderWidth:1.5, borderRadius:4 }] },
+
+    options:{ indexAxis:'y', responsive:true, maintainAspectRatio:false,
+
+      plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label: c => c.raw + ' escalations (' + (c.raw/total*100).toFixed(1) + '%)' }}},
+
+      scales:{ x:{ ticks:{font:{size:11}}, grid:{color:'rgba(0,0,0,0.04)'} }, y:{ ticks:{font:{size:11}}, grid:{display:false} } }
+
+    }
+
+  });
+
+}
+
+function renderDeptChart(rows) {
+
+  destroyChart('deptChart');
+
+  const m = new Map();
+
+  rows.forEach(r => {
+
+    if (!r.isEsc && !r.dept) return;
+
+    const k = r.dept || (r.isEsc ? 'Unassigned' : null);
+
+    if (!k) return;
+
+    if (!m.has(k)) m.set(k, {bk:0,esc:0});
+
+    const v = m.get(k); v.bk++; if (r.isEsc) v.esc++;
+
+  });
+
+  // dept counts only escalations meaningfully — use escalation counts and DR
+
+  const escTotalByDept = new Map();
+
+  rows.forEach(r => { if (r.isEsc) escTotalByDept.set(r.dept||'Unassigned', (escTotalByDept.get(r.dept||'Unassigned')||0)+1); });
+
+  const arr = [...escTotalByDept.entries()].map(([d,c]) => ({d, esc:c})).sort((a,b)=>b.esc-a.esc).slice(0,10);
+
+  charts.deptChart = new Chart(document.getElementById('deptChart'), {
+
+    type:'bar',
+
+    data:{ labels: arr.map(x => x.d.length > 22 ? x.d.slice(0,20)+'…' : x.d),
+
+      datasets:[{ label:'Escalations', data: arr.map(x=>x.esc), backgroundColor:'#1D4ED8AA', borderColor:'#1D4ED8', borderWidth:1.5, borderRadius:4 }] },
+
+    options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}},
+
+      scales:{ x:{ ticks:{font:{size:11},maxRotation:40,autoSkip:false},grid:{display:false} },
+
+               y:{ ticks:{font:{size:11}, precision:0}, grid:{color:'rgba(0,0,0,0.04)'} } } }
+
+  });
+
+}
+
+function renderSubmitterChart(esc) {
+
+  destroyChart('submitterChart');
+
+  // Top 5 submitters; line per submitter across periods
+
+  const subCount = new Map();
+
+  esc.forEach(r => { if (!r.submitter) return; subCount.set(r.submitter, (subCount.get(r.submitter)||0)+1); });
+
+  const topSubs = [...subCount.entries()].sort((a,b)=>b[1]-a[1]).slice(0,5).map(x=>x[0]);
+
+  if (!topSubs.length) {
+
+    const ctx = document.getElementById('submitterChart').getContext('2d');
+
+    ctx.clearRect(0,0,ctx.canvas.width,ctx.canvas.height);
+
+    ctx.font = '13px Inter'; ctx.fillStyle = '#9CA3AF'; ctx.textAlign = 'center';
+
+    ctx.fillText('No "Submitted by" data available', ctx.canvas.width/2, ctx.canvas.height/2);
+
+    return;
+
+  }
+
+  // Use same period as dashboard
+
+  const periodKeyFn = (S.period === 'weekly') ? (r => r.weekKey)
+
+                    : (S.period === 'quarterly') ? (r => r.year>0 ? r.year+'-'+r.qtr : '')
+
+                    : (S.period === 'yearly') ? (r => r.year>0 ? String(r.year) : '')
+
+                    : (r => r.year>0 ? r.year+'-'+String(r.month).padStart(2,'0') : '');
+
+  const allKeys = [...new Set(esc.map(periodKeyFn).filter(Boolean))].sort();
+
+  const series = topSubs.map(s => {
+
+    const data = allKeys.map(k => esc.filter(r => r.submitter === s && periodKeyFn(r) === k).length);
+
+    return { name: s, data };
+
+  });
+
+  const palette = ['#1D4ED8','#EF4444','#15803D','#D97706','#7C3AED'];
+
+  const labels = allKeys.map(k => {
+
+    if (S.period === 'weekly') { const [y,m,d] = k.split('-'); return d+' '+['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][+m]; }
+
+    if (S.period === 'monthly') { const [y,m] = k.split('-'); return ['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][+m]+' '+y.slice(2); }
+
+    return k;
+
+  });
+
+  charts.submitterChart = new Chart(document.getElementById('submitterChart'), {
+
+    type:'line',
+
+    data:{ labels, datasets: series.map((s,i) => ({
+
+      label: s.name, data: s.data,
+
+      borderColor: palette[i], backgroundColor: palette[i]+'22',
+
+      tension:0.3, pointRadius:3, borderWidth:2, fill:false
+
+    })) },
+
+    options:{ responsive:true, maintainAspectRatio:false,
+
+      plugins:{ legend:{position:'bottom', labels:{font:{size:11},boxWidth:10,padding:8}} },
+
+      scales:{ x:{ ticks:{font:{size:11},maxRotation:40,autoSkip:true},grid:{display:false} },
+
+               y:{ ticks:{font:{size:11},precision:0}, grid:{color:'rgba(0,0,0,0.04)'} } } }
+
+  });
+
+}
+
+function renderTopHotels(esc) {
+
+  const wrap = document.getElementById('hotelsTableWrap');
+
+  const withHotel = esc.filter(r => r.hotel);
+
+  if (!withHotel.length) {
+
+    wrap.innerHTML = `<div class="empty-state" style="padding:30px 20px">
+
+      <i class="ti ti-building"></i>
+
+      <h3>No hotel data</h3>
+
+      <p>Map a "Hotel / Property" column in the upload screen to see hotels here.</p></div>`;
+
+    return;
+
+  }
+
+  // Group by hotel; within each, group by issue type AND track suppliers
+
+  const byHotel = new Map();
+
+  withHotel.forEach(r => {
+
+    if (!byHotel.has(r.hotel)) byHotel.set(r.hotel, { total:0, branches:new Set(), suppliers:new Set(), issues:new Map() });
+
+    const h = byHotel.get(r.hotel);
+
+    h.total++;
+
+    if (r.branch) h.branches.add(r.branch);
+
+    if (r.supplier) h.suppliers.add(r.supplier);
+
+    h.issues.set(r.issue||'Unknown', (h.issues.get(r.issue||'Unknown')||0)+1);
+
+  });
+
+  const top = [...byHotel.entries()].sort((a,b)=>b[1].total-a[1].total).slice(0,10);
+
+  let html = `<table class="data-table"><thead><tr>
+
+    <th style="width:28%">Hotel / Property</th><th>Branch(es)</th><th>Supplier(s)</th><th>Issue type</th><th style="text-align:right">Count</th><th style="width:14%">Share</th>
+
+    </tr></thead><tbody>`;
+
+  top.forEach(([hotel, info], idx) => {
+
+    const issues = [...info.issues.entries()].sort((a,b)=>b[1]-a[1]);
+
+    const branchList = [...info.branches].join(', ') || '—';
+
+    const supplierList = [...info.suppliers].join(', ') || '—';
+
+    issues.forEach(([issue, cnt], j) => {
+
+      const pct = (cnt/info.total*100).toFixed(0);
+
+      if (j === 0) {
+
+        html += `<tr>
+
+          <td style="font-weight:600">#${idx+1} ${escapeHtml(hotel)} <span class="badge badge-red" style="margin-left:6px">${info.total} esc</span></td>
+
+          <td style="font-size:11.5px;color:var(--text2);white-space:normal;max-width:200px">${escapeHtml(branchList)}</td>
+
+          <td style="font-size:11.5px;color:var(--text2);white-space:normal;max-width:200px">${escapeHtml(supplierList)}</td>
+
+          <td>${escapeHtml(issue)}</td>
+
+          <td style="text-align:right;font-weight:500">${cnt}</td>
+
+          <td><div class="mini-bar-wrap"><div class="mini-bar-val" style="width:${pct}%;background:#1D4ED8"></div></div></td>
+
+        </tr>`;
+
+      } else {
+
+        html += `<tr class="subrow">
+
+          <td>↳ same hotel</td><td>—</td><td>—</td>
+
+          <td>${escapeHtml(issue)}</td>
+
+          <td style="text-align:right">${cnt}</td>
+
+          <td><div class="mini-bar-wrap"><div class="mini-bar-val" style="width:${pct}%;background:#94A3B8"></div></div></td>
+
+        </tr>`;
+
+      }
+
+    });
+
+  });
+
+  html += '</tbody></table>';
+
+  wrap.innerHTML = html;
+
+}
+
+function destroyChart(id) { if (charts[id]) { charts[id].destroy(); delete charts[id]; } }
+
+// ═══════════════════════════════════════════════════
+
+// DEEP ANALYSIS
+
+// ═══════════════════════════════════════════════════
+
+// ═══════════════════════════════════════════════════
+
+// CHANGE 4: CHRONOLOGICAL SORT HELPERS
+
+// ═══════════════════════════════════════════════════
+
+const MONTH_ORDER = {jan:1,feb:2,mar:3,apr:4,may:5,jun:6,jul:7,aug:8,sep:9,oct:10,nov:11,dec:12};
+
+function getMonthOrder(s) {
+
+  // Accepts "Jun 2026", "Jun 26", number, or raw month name
+
+  s = String(s);
+
+  let m = s.match(/^([A-Za-z]{3})\s+(\d{2,4})$/);
+
+  if (m) { const y = +m[2] < 100 ? 2000 + +m[2] : +m[2]; return y * 100 + (MONTH_ORDER[m[1].toLowerCase()]||0); }
+
+  // bare month name "Jun"
+
+  m = s.match(/^([A-Za-z]{3,9})$/);
+
+  if (m) return MONTH_ORDER[m[1].slice(0,3).toLowerCase()] || 0;
+
+  return null;
+
+}
+
+function sortMonthsChronologically(keys) {
+
+  return [...keys].sort((a, b) => {
+
+    const av = getMonthOrder(a), bv = getMonthOrder(b);
+
+    if (av != null && bv != null) return av - bv;
+
+    return String(a).localeCompare(String(b));
+
+  });
+
+}
+
+function getQuarterOrder(s) {
+
+  s = String(s);
+
+  // "2026 Q2" or "2026-Q2"
+
+  let m = s.match(/^(\d{4})[\s\-]Q([1-4])$/);
+
+  if (m) return (+m[1]) * 10 + (+m[2]);
+
+  // bare "Q2"
+
+  m = s.match(/^Q([1-4])$/);
+
+  if (m) return +m[1];
+
+  return null;
+
+}
+
+function sortQuartersChronologically(keys) {
+
+  return [...keys].sort((a, b) => {
+
+    const av = getQuarterOrder(a), bv = getQuarterOrder(b);
+
+    if (av != null && bv != null) return av - bv;
+
+    return String(a).localeCompare(String(b));
+
+  });
+
+}
+
+// Returns a numeric sort score for a single key segment given a dimension name.
+
+// Works on both plain keys ("Jan 2026", "2026 Q1") and is used to build
+
+// composite comparators.
+
+function getChronoScore(dim, seg) {
+
+  if (dim === 'month')   return getMonthOrder(seg);
+
+  if (dim === 'quarter') return getQuarterOrder(seg);
+
+  return null;
+
+}
+
+// Returns a comparator that keeps months/quarters chronological
+
+// regardless of the "sort" control.
+
+// When dim3 is active the column keys are composites: "Jan 2026 · 2026 Q1".
+
+// Pass dim2 and dim3 so each segment is scored with the right parser.
+
+function makeKeyCmp(dim, sort, dim3Arg) {
+
+  const isTimeDim2 = dim === 'month' || dim === 'quarter';
+
+  const isTimeDim3 = dim3Arg && (dim3Arg === 'month' || dim3Arg === 'quarter');
+
+  const isComposite = !!dim3Arg && dim3Arg !== 'none';
+
+  if (!isComposite) {
+
+    // Simple single-dim key
+
+    if (isTimeDim2) {
+
+      return (a, b) => {
+
+        const av = getChronoScore(dim, String(a));
+
+        const bv = getChronoScore(dim, String(b));
+
+        return (av != null && bv != null) ? av - bv : String(a).localeCompare(String(b));
+
+      };
+
+    }
+
+    return (a, b) => String(a).localeCompare(String(b));
+
+  }
+
+  // Composite key: "segA · segB"
+
+  // Sort by segA (dim2) first; if equal, sort by segB (dim3).
+
+  return (a, b) => {
+
+    const [aA, aB = ''] = String(a).split(' · ');
+
+    const [bA, bB = ''] = String(b).split(' · ');
+
+    // Primary: segA (dim2)
+
+    const aAv = getChronoScore(dim, aA);
+
+    const bAv = getChronoScore(dim, bA);
+
+    let cmp = 0;
+
+    if (aAv != null && bAv != null) cmp = aAv - bAv;
+
+    else cmp = aA.localeCompare(bA);
+
+    if (cmp !== 0) return cmp;
+
+    // Secondary: segB (dim3)
+
+    const aBv = getChronoScore(dim3Arg, aB);
+
+    const bBv = getChronoScore(dim3Arg, bB);
+
+    if (aBv != null && bBv != null) return aBv - bBv;
+
+    return aB.localeCompare(bB);
+
+  };
+
+}
+
+// ═══════════════════════════════════════════════════
+
+// DEEP ANALYSIS (Changes 1, 4, 6)
+
+// ═══════════════════════════════════════════════════
+
+function renderAnalysis() {
+
+  if (!S.analysed) return;
+
+  const rows = S.filtered || S.analysed.rows;
+
+  const dim1   = document.getElementById('analysis-dim1').value;
+
+  const dim2   = document.getElementById('analysis-dim2').value;
+
+  const dim3Sel= document.getElementById('analysis-dim3');
+
+  const dim3   = dim3Sel ? dim3Sel.value : 'none';
+
+  const metric = document.getElementById('analysis-metric').value;
+
+  const sort   = document.getElementById('analysis-sort').value;
+
+  const view   = document.getElementById('analysis-view').value;
+
+  // City is a booking-level dimension (it is available on every row).
+
+  const bookingKeyFns = {
+
+    branch:   r => r.branch,
+
+    service:  r => r.service,
+
+    supplier: r => r.supplier || null,
+
+    hotel:    r => r.hotel || null,
+
+    city:     r => r.city || null,
+
+    month:    r => r.year > 0 ? r.monthLabel : null,
+
+    quarter:  r => r.year > 0 ? r.year+' '+r.qtr : null,
+
+  };
+
+  // Escalation-only keys exist only on isEsc rows.
+
+  const escKeyFns = {
+
+    dept:      r => r.isEsc ? (r.dept || 'Unassigned') : null,
+
+    issue:     r => r.isEsc ? (r.issue || null)        : null,
+
+    submitter: r => r.isEsc ? (r.submitter || null)    : null,
+
+  };
+
+  const isEscDim = d => d in escKeyFns;
+
+  const keyFns = { ...bookingKeyFns, ...escKeyFns };
+
+  const fn1 = keyFns[dim1];
+
+  // When a 3rd dimension is set, combine dim2 × dim3 into a composite column key.
+
+  let fn2 = null;
+
+  if (dim2 !== 'none' && dim3 !== 'none') {
+
+    const f2 = keyFns[dim2], f3 = keyFns[dim3];
+
+    fn2 = r => { const a = f2(r), b = f3(r); return (a && b) ? (a + ' · ' + b) : null; };
+
+    if (isEscDim(dim2) || isEscDim(dim3)) escKeyFns.__composite = fn2;
+
+    else bookingKeyFns.__composite = fn2;
+
+    keyFns.__composite = fn2;
+
+  } else if (dim2 !== 'none') {
+
+    fn2 = keyFns[dim2];
+
+  }
+
+  const dim2Eff = (dim2 !== 'none' && dim3 !== 'none') ? '__composite' : dim2;
+
+  const metricFn = { dr: x=>x.dr, esc: x=>x.esc, bk: x=>x.bk }[metric];
+
+  const metricLabel = metric === 'dr' ? 'DR %' : metric === 'esc' ? 'Escalations' : 'Bookings';
+
+  const dr = (esc, bk) => bk ? +(esc/bk*100).toFixed(3) : 0;
+
+  const heatWrap = document.getElementById('heatmapWrap');
+
+  const canvas   = document.getElementById('analysisChart');
+
+  heatWrap.style.display = 'none';
+
+  canvas.parentElement.style.display = 'block';
+
+  if (fn2 && (view === 'stacked' || view === 'heatmap' || view === 'line' || view === 'bar')) {
+
+    // ── 2D path ─────────────────────────────────────────────
+
+    // CHANGE 6: bkBoth tracks exact (k1, k2) booking counts so DR uses the
+
+    // intersection denominator, not a marginal total.
+
+    const escCount = new Map();  // k1 -> Map(k2 -> count)
+
+    const bkBoth   = new Map();  // k1 -> Map(k2 -> count)  [both booking dims]
+
+    const bkByK1   = new Map();  // k1 -> count              [dim1=booking, dim2=esc-only]
+
+    const bkByK2   = new Map();  // k2 -> count              [dim1=esc-only, dim2=booking]
+
+    let bkTotal = 0;
+
+    rows.forEach(r => {
+
+      bkTotal++;
+
+      if (!isEscDim(dim1)) {
+
+        const k1b = bookingKeyFns[dim1](r);
+
+        if (k1b) bkByK1.set(k1b, (bkByK1.get(k1b)||0)+1);
+
+      }
+
+      if (!isEscDim(dim2Eff) && dim2Eff !== 'none') {
+
+        const k2b = bookingKeyFns[dim2Eff](r);
+
+        if (k2b) bkByK2.set(k2b, (bkByK2.get(k2b)||0)+1);
+
+      }
+
+      // Exact cross-tab booking counts for DR denominator (Change 6)
+
+      if (!isEscDim(dim1) && !isEscDim(dim2Eff) && dim2Eff !== 'none') {
+
+        const k1b = bookingKeyFns[dim1](r);
+
+        const k2b = bookingKeyFns[dim2Eff](r);
+
+        if (k1b && k2b) {
+
+          if (!bkBoth.has(k1b)) bkBoth.set(k1b, new Map());
+
+          const inner = bkBoth.get(k1b);
+
+          inner.set(k2b, (inner.get(k2b)||0)+1);
+
+        }
+
+      }
+
+      if (r.isEsc) {
+
+        const k1 = fn1(r), k2 = fn2(r);
+
+        if (k1 && k2) {
+
+          if (!escCount.has(k1)) escCount.set(k1, new Map());
+
+          const inner = escCount.get(k1);
+
+          inner.set(k2, (inner.get(k2)||0)+1);
+
+        }
+
+      }
+
+    });
+
+    // Per-cell booking denominator — always the exact intersection count.
+
+    const bkOf = (k1, k2) => {
+
+      if (!isEscDim(dim1) && !isEscDim(dim2Eff)) return (bkBoth.get(k1)?.get(k2)) || 0;
+
+      if (isEscDim(dim1)  && !isEscDim(dim2Eff)) return bkByK2.get(k2) || 0;
+
+      if (!isEscDim(dim1) && isEscDim(dim2Eff))  return bkByK1.get(k1) || 0;
+
+      return bkTotal;
+
+    };
+
+    // Row / col universes
+
+    let rowKeys = isEscDim(dim1) ? [...escCount.keys()] : [...bkByK1.keys()];
+
+    let colKeys;
+
+    if (isEscDim(dim2Eff)) {
+
+      const set = new Set();
+
+      escCount.forEach(m => m.forEach((_, k) => set.add(k)));
+
+      colKeys = [...set];
+
+    } else {
+
+      colKeys = [...bkByK2.keys()];
+
+    }
+
+    // Build grid {bk, esc} for every (rk, ck)
+
+    const grid = new Map();
+
+    rowKeys.forEach(rk => {
+
+      const inner = new Map();
+
+      colKeys.forEach(ck => {
+
+        const bk  = bkOf(rk, ck);
+
+        const esc = escCount.get(rk)?.get(ck) || 0;
+
+        if (bk || esc) inner.set(ck, { bk, esc });
+
+      });
+
+      grid.set(rk, inner);
+
+    });
+
+    // Row sort — metric-based for value sorts; chronological for time dims
+
+    const rowAgg = rowKeys.map(k => {
+
+      const cells  = [...(grid.get(k)||new Map()).values()];
+
+      const escSum = cells.reduce((s, v) => s + v.esc, 0);
+
+      const bkSum  = isEscDim(dim1) ? bkTotal : (bkByK1.get(k) || 0);
+
+      return { k, val: metricFn({ bk: bkSum, esc: escSum, dr: dr(escSum, bkSum) }) };
+
+    });
+
+    const rowIsTime = dim1 === 'month' || dim1 === 'quarter';
+
+    const rowKeyCmp = makeKeyCmp(dim1, sort);
+
+    if (sort === 'desc' && !rowIsTime)      rowAgg.sort((a, b) => b.val - a.val);
+
+    else if (sort === 'asc' && !rowIsTime)  rowAgg.sort((a, b) => a.val - b.val);
+
+    else                                    rowAgg.sort((a, b) => rowKeyCmp(a.k, b.k));
+
+    const sortedRowKeys = rowAgg.map(x => x.k).slice(0, 30);
+
+    // Column sort — ALWAYS chronological for month/quarter (Change 4)
+
+    // When dim3 is active, pass it so composite keys ("Jan 2026 · 2026 Q1") sort correctly.
+
+    const colKeyCmp = makeKeyCmp(dim2 !== 'none' ? dim2 : dim1, 'alpha', dim3 !== 'none' ? dim3 : undefined);
+
+    colKeys.sort(colKeyCmp);
+
+    const cellVal = v => metricFn({ bk: v.bk, esc: v.esc, dr: dr(v.esc, v.bk) });
+
+    if (view === 'heatmap') {
+
+      canvas.parentElement.style.display = 'none';
+
+      heatWrap.style.display = 'block';
+
+      let max = 0;
+
+      sortedRowKeys.forEach(rk => colKeys.forEach(ck => {
+
+        const v = (grid.get(rk)||new Map()).get(ck);
+
+        if (v) { const val = cellVal(v); if (val > max) max = val; }
+
+      }));
+
+      let html = `<table class="data-table" style="border-collapse:separate;border-spacing:2px"><thead><tr><th></th>`;
+
+      colKeys.forEach(c => { html += `<th style="font-size:10px">${escapeHtml(String(c))}</th>`; });
+
+      html += '</tr></thead><tbody>';
+
+      sortedRowKeys.forEach(rk => {
+
+        html += `<tr><td style="font-weight:500;font-size:11px">${escapeHtml(String(rk))}</td>`;
+
+        colKeys.forEach(ck => {
+
+          const v = (grid.get(rk)||new Map()).get(ck);
+
+          if (!v) { html += `<td style="background:#F7F8FC;text-align:center;font-size:11px;color:#CBD5E1">·</td>`; return; }
+
+          const val       = cellVal(v);
+
+          const intensity = max ? val / max : 0;
+
+          const bg        = metric === 'dr' ? drColor(dr(v.esc, v.bk)) : '#1D4ED8';
+
+          const alpha     = Math.max(0.08, intensity);
+
+          const display   = metric === 'dr' ? val.toFixed(2)+'%' : val.toLocaleString();
+
+          html += `<td style="background:${bg}${Math.round(alpha*255).toString(16).padStart(2,'0')};text-align:center;font-size:11px;font-weight:500;color:${intensity>0.5?'#fff':'#111827'}">${display}</td>`;
+
+        });
+
+        html += '</tr>';
+
+      });
+
+      html += '</tbody></table>';
+
+      heatWrap.innerHTML = html;
+
+    } else if (view === 'stacked') {
+
+      destroyChart('analysisChart');
+
+      const palette = ['#1D4ED8','#EF4444','#D97706','#15803D','#7C3AED','#DB2777','#0891B2','#EA580C','#0D9488','#374151'];
+
+      const datasets = colKeys.slice(0, 12).map((ck, i) => ({
+
+        label: String(ck),
+
+        data: sortedRowKeys.map(rk => { const v = (grid.get(rk)||new Map()).get(ck); return v ? cellVal(v) : 0; }),
+
+        backgroundColor: palette[i%palette.length]+'CC',
+
+        borderColor: palette[i%palette.length],
+
+        borderWidth: 1
+
+      }));
+
+      charts.analysisChart = new Chart(canvas, {
+
+        type: 'bar',
+
+        data: { labels: sortedRowKeys.map(k => { const s=String(k); return s.length>26?s.slice(0,24)+'…':s; }), datasets },
+
+        options: { responsive:true, maintainAspectRatio:false, indexAxis:'y',
+
+          plugins: { legend:{position:'bottom',labels:{font:{size:10},boxWidth:10,padding:6}} },
+
+          scales: { x:{ stacked:true, ticks:{font:{size:11},callback:v=>metric==='dr'?v+'%':v}, grid:{color:'rgba(0,0,0,0.04)'} },
+
+                    y:{ stacked:true, ticks:{font:{size:11}} } } }
+
+      });
+
+    } else {
+
+      destroyChart('analysisChart');
+
+      const palette = ['#1D4ED8','#EF4444','#D97706','#15803D','#7C3AED','#DB2777','#0891B2','#EA580C','#0D9488','#374151'];
+
+      const isBar = view === 'bar';
+
+      const datasets = sortedRowKeys.slice(0, 8).map((rk, i) => ({
+
+        label: (s => s.length>20 ? s.slice(0,18)+'…' : s)(String(rk)),
+
+        data: colKeys.map(ck => { const v = (grid.get(rk)||new Map()).get(ck); return v ? cellVal(v) : 0; }),
+
+        borderColor: palette[i%palette.length],
+
+        backgroundColor: isBar ? palette[i%palette.length]+'CC' : palette[i%palette.length]+'22',
+
+        tension:0.3, pointRadius:3, borderWidth: isBar?1:2, fill:false, borderRadius: isBar?4:0
+
+      }));
+
+      charts.analysisChart = new Chart(canvas, {
+
+        type: isBar ? 'bar' : 'line',
+
+        data: { labels: colKeys.map(String), datasets },
+
+        options: { responsive:true, maintainAspectRatio:false,
+
+          plugins: { legend:{position:'bottom',labels:{font:{size:10},boxWidth:10,padding:6}} },
+
+          scales: { x:{ ticks:{font:{size:11},maxRotation:40,autoSkip:true}, grid:{display:false} },
+
+                    y:{ ticks:{font:{size:11},callback:v=>metric==='dr'?v+'%':v}, grid:{color:'rgba(0,0,0,0.04)'} } } }
+
+      });
+
+    }
+
+    // Flatten grid for table
+
+    const flat = [];
+
+    sortedRowKeys.forEach(rk => colKeys.forEach(ck => {
+
+      const v = (grid.get(rk)||new Map()).get(ck);
+
+      if (!v || (!v.esc && !v.bk)) return;
+
+      flat.push({ k: String(rk)+' · '+String(ck), bk: v.bk, esc: v.esc, dr: dr(v.esc, v.bk) });
+
+    }));
+
+    if (sort === 'desc' && !rowIsTime) flat.sort((a, b) => metricFn(b) - metricFn(a));
+
+    else if (sort === 'asc' && !rowIsTime) flat.sort((a, b) => metricFn(a) - metricFn(b));
+
+    renderAnalysisTable(flat, dim3 !== 'none' ? `${dim1} × ${dim2} × ${dim3}` : `${dim1} × ${dim2}`);
+
+  } else {
+
+    // ── 1D path ─────────────────────────────────────────────
+
+    const escByK = new Map();
+
+    const bkByK  = new Map();
+
+    let bkTotal = 0;
+
+    rows.forEach(r => {
+
+      bkTotal++;
+
+      if (!isEscDim(dim1)) { const kb = bookingKeyFns[dim1](r); if (kb) bkByK.set(kb, (bkByK.get(kb)||0)+1); }
+
+      if (r.isEsc) { const k = fn1(r); if (k) escByK.set(k, (escByK.get(k)||0)+1); }
+
+    });
+
+    let arr;
+
+    if (isEscDim(dim1)) {
+
+      arr = [...escByK.entries()].map(([k, esc]) => ({ k, bk: bkTotal, esc, dr: dr(esc, bkTotal) }));
+
+    } else {
+
+      arr = [...bkByK.entries()].map(([k, bk]) => {
+
+        const esc = escByK.get(k) || 0;
+
+        return { k, bk, esc, dr: dr(esc, bk) };
+
+      }).filter(x => x.bk > 0);
+
+    }
+
+    // Sort — Change 4: time dims always chronological
+
+    const dimIsTime = dim1 === 'month' || dim1 === 'quarter';
+
+    const keyCmp1D  = makeKeyCmp(dim1, sort);
+
+    if (sort === 'desc' && !dimIsTime)     arr.sort((a, b) => metricFn(b) - metricFn(a));
+
+    else if (sort === 'asc' && !dimIsTime) arr.sort((a, b) => metricFn(a) - metricFn(b));
+
+    else                                   arr.sort((a, b) => keyCmp1D(a.k, b.k));
+
+    const display = arr.slice(0, 30);
+
+    destroyChart('analysisChart');
+
+    charts.analysisChart = new Chart(canvas, {
+
+      type: 'bar',
+
+      data: { labels: display.map(r => { const s=String(r.k); return s.length>28?s.slice(0,26)+'…':s; }),
+
+        datasets:[{ label: metricLabel, data: display.map(metricFn),
+
+          backgroundColor: display.map(r => metric==='dr' ? drColor(r.dr)+'CC' : '#1D4ED8CC'),
+
+          borderColor: display.map(r => metric==='dr' ? drColor(r.dr) : '#1D4ED8'),
+
+          borderWidth:1.5, borderRadius:4 }] },
+
+      options: { indexAxis:'y', responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}},
+
+        scales: { x:{ ticks:{callback:v=>metric==='dr'?v+'%':v,font:{size:11}}, grid:{color:'rgba(0,0,0,0.04)'} },
+
+                  y:{ ticks:{font:{size:11}} } } }
+
+    });
+
+    renderAnalysisTable(arr, dim1);
+
+  }
+
+}
+
+function renderAnalysisTable(arr, title) {
+
+  let h = `<table class="data-table"><thead><tr><th>${escapeHtml(title)}</th><th>Bookings</th><th>Escalations</th><th>DR</th></tr></thead><tbody>`;
+
+  arr.forEach(x => {
+
+    h += `<tr><td style="font-weight:500">${escapeHtml(x.k)}</td><td>${x.bk.toLocaleString()}</td><td>${x.esc}</td><td><span class="badge ${drBadge(x.dr)}">${x.dr}%</span></td></tr>`;
+
+  });
+
+  h += '</tbody></table>';
+
+  document.getElementById('analysisTableWrap').innerHTML = h;
+
+  document.getElementById('analysisTableTitle').textContent = `Analysis: ${title} — ${arr.length} rows`;
+
+}
+
+// ═══════════════════════════════════════════════════
+
+// ESCALATION LOG
+
+// ═══════════════════════════════════════════════════
+
+function renderEscalations() { if (!S.analysed) return; filterEscalations(); }
+
+function filterEscalations() {
+
+  if (!S.analysed) return;
+
+  const search   = (document.getElementById('escSearch').value||'').toLowerCase();
+
+  const branch   = document.getElementById('escBranchFlt').value;
+
+  const issue    = document.getElementById('escIssueFlt').value;
+
+  const supplier = (document.getElementById('escSupplierFlt')||{}).value || 'all';
+
+  const city     = (document.getElementById('escCityFlt')||{}).value || 'all';
+
+  const status   = document.getElementById('escStatusFlt').value;
+
+  let esc = S.analysed.rows.filter(r => r.isEsc);
+
+  if (branch   !== 'all') esc = esc.filter(r => r.branch   === branch);
+
+  if (issue    !== 'all') esc = esc.filter(r => r.issue    === issue);
+
+  if (supplier !== 'all') esc = esc.filter(r => r.supplier === supplier);
+
+  if (city     !== 'all') esc = esc.filter(r => r.city     === city);
+
+  if (status   !== 'all') esc = esc.filter(r => r.status   === status);
+
+  if (search) esc = esc.filter(r =>
+
+    r.id.toLowerCase().includes(search) ||
+
+    r.branch.toLowerCase().includes(search) ||
+
+    r.issue.toLowerCase().includes(search)
+
+  );
+
+  const totalAmt   = esc.reduce((s,r)=>s+r.amount,0);
+
+  const totalCount = esc.length;
+
+  // ── Dynamic status KPI cards (Change 5) ─────────────────
+
+  const statusMap = new Map();
+
+  esc.forEach(r => {
+
+    const st = r.status || 'Unknown';
+
+    statusMap.set(st, (statusMap.get(st)||0)+1);
+
+  });
+
+  // Status-to-colour heuristic
+
+  const statusBadgeClass = st => {
+
+    const s = (st||'').toLowerCase();
+
+    if (s.includes('cancel'))    return 'warn';
+
+    if (s.includes('vouch') || s.includes('confirm') || s.includes('invoic')) return '';
+
+    if (s.includes('reject') || s.includes('fail'))  return 'danger';
+
+    return 'info';
+
+  };
+
+  let kpiHtml = `<div class="kpi-card" style="padding:10px 14px;min-width:0"><div class="kpi-label">Showing</div><div class="kpi-value" style="font-size:20px">${totalCount.toLocaleString()}</div></div>`;
+
+  [...statusMap.entries()].sort((a,b)=>b[1]-a[1]).forEach(([st, cnt]) => {
+
+    const pct = totalCount ? (cnt/totalCount*100).toFixed(1) : '0.0';
+
+    const cls = statusBadgeClass(st);
+
+    kpiHtml += `<div class="kpi-card ${cls}" style="padding:10px 14px;min-width:0"><div class="kpi-label">${escapeHtml(st)}</div><div class="kpi-value" style="font-size:20px">${cnt.toLocaleString()}</div><div class="kpi-sub">${pct}% of total</div></div>`;
+
+  });
+
+  if (totalAmt > 0) {
+
+    kpiHtml += `<div class="kpi-card info" style="padding:10px 14px;min-width:0"><div class="kpi-label">Total amount</div><div class="kpi-value" style="font-size:20px">${(totalAmt/1000).toFixed(0)}K</div></div>`;
+
+  }
+
+  document.getElementById('escStats').innerHTML = kpiHtml;
+
+  // ── Table ────────────────────────────────────────────────
+
+  const cap = 1000;
+
+  const slice = esc.slice(0, cap);
+
+  let h = `<table class="data-table"><thead><tr>
+
+    <th>Booking ID</th><th>Branch</th><th>Department</th><th>Issue type</th><th>Hotel</th><th>Submitted by</th><th>Service</th><th>Supplier</th><th>City</th><th>Date</th><th>Status</th>
+
+    ${totalAmt>0?'<th style="text-align:right">Amount</th>':''}
+
+    </tr></thead><tbody>`;
+
+  slice.forEach(r => {
+
+    const dtSrc = r.escDt || r.dt;
+
+    const dt = dtSrc ? dtSrc.toLocaleDateString('en-GB') : '—';
+
+    const stLower = (r.status||'').toLowerCase();
+
+    const stBadge = stLower.includes('vouch')||stLower.includes('confirm')||stLower.includes('invoic') ? 'badge-green'
+
+                  : stLower.includes('cancel') ? 'badge-amber' : 'badge-gray';
+
+    h += `<tr>
+
+      <td class="mono">${escapeHtml(r.id)}</td>
+
+      <td style="font-weight:500">${escapeHtml(r.branch)}</td>
+
+      <td><span class="badge badge-blue">${escapeHtml(r.dept||'—')}</span></td>
+
+      <td style="max-width:220px;white-space:normal;font-size:12px;line-height:1.4">${escapeHtml(r.issue)}</td>
+
+      <td style="max-width:160px;white-space:normal;font-size:12px">${escapeHtml(r.hotel||'—')}</td>
+
+      <td>${escapeHtml(r.submitter||'—')}</td>
+
+      <td>${escapeHtml(r.service)}</td>
+
+      <td>${escapeHtml(r.supplier||'—')}</td>
+
+      <td>${escapeHtml(r.city||'—')}</td>
+
+      <td>${dt}</td>
+
+      <td><span class="badge ${stBadge}">${escapeHtml(r.status||'—')}</span></td>
+
+      ${totalAmt>0?`<td style="text-align:right;font-size:12px">${r.amount>0?r.amount.toLocaleString('en-IN',{maximumFractionDigits:0}):'—'}</td>`:''}
+
+    </tr>`;
+
+  });
+
+  if (!esc.length) h += `<tr><td colspan="12" style="text-align:center;padding:30px;color:var(--text3)">No escalations match the current filters</td></tr>`;
+
+  h += '</tbody></table>';
+
+  if (esc.length > cap) h += `<div style="padding:10px 12px;font-size:11px;color:var(--text3);text-align:center">Showing first ${cap.toLocaleString()} of ${esc.length.toLocaleString()} — refine filters or export to CSV for full list</div>`;
+
+  document.getElementById('escTableWrap').innerHTML = h;
+
+}
+
+// ═══════════════════════════════════════════════════
+
+// EXPORT
+
+// ═══════════════════════════════════════════════════
+
+function toCSV(rows, cols) {
+
+  const esc = v => { const s = String(v??''); return /[",\n]/.test(s) ? '"'+s.replace(/"/g,'""')+'"' : s; };
+
+  return [cols.join(','), ...rows.map(r => cols.map(c => esc(r[c])).join(','))].join('\n');
+
+}
+
+function downloadCSV(content, name) {
+
+  const blob = new Blob([content], { type:'text/csv;charset=utf-8' });
+
+  const a = document.createElement('a');
+
+  a.href = URL.createObjectURL(blob); a.download = name; a.click();
+
+  setTimeout(()=>URL.revokeObjectURL(a.href), 1000);
+
+}
+
+function exportReport(type) {
+
+  if (!S.analysed) { showToast('No data loaded', 'error'); return; }
+
+  const rows = S.filtered || S.analysed.rows;
+
+  const esc = rows.filter(r => r.isEsc);
+
+  const prefix = S.settings.filePrefix;
+
+  let csv, name;
+
+  if (type === 'monthly') {
+
+    const old = S.period; S.period = 'monthly';
+
+    const trend = getTrendData(rows); S.period = old;
+
+    csv = toCSV(trend, ['label','bk','esc','dr']); name = prefix+'monthly.csv';
+
+  } else if (type === 'weekly') {
+
+    const old = S.period; S.period = 'weekly';
+
+    const trend = getTrendData(rows); S.period = old;
+
+    csv = toCSV(trend.map(t => ({'Week starting':t.key, Bookings:t.bk, Escalations:t.esc, 'DR %':t.dr})), ['Week starting','Bookings','Escalations','DR %']);
+
+    name = prefix+'weekly.csv';
+
+  } else if (type === 'branch') {
+
+    const m = new Map();
+
+    rows.forEach(r => { if(!m.has(r.branch)) m.set(r.branch,{bk:0,esc:0}); const v=m.get(r.branch); v.bk++; if(r.isEsc)v.esc++; });
+
+    const arr = [...m.entries()].map(([b,v])=>({Branch:b, Bookings:v.bk, Escalations:v.esc, 'Defect Ratio %': v.bk?+(v.esc/v.bk*100).toFixed(3):0})).sort((a,b)=>b['Defect Ratio %']-a['Defect Ratio %']);
+
+    csv = toCSV(arr, ['Branch','Bookings','Escalations','Defect Ratio %']); name = prefix+'branch.csv';
+
+  } else {
+
+    const data = esc.map(r => ({ 'Booking ID':r.id, Branch:r.branch, Department:r.dept, 'Issue Type':r.issue, Hotel:r.hotel, 'Submitted By':r.submitter, Service:r.service, Supplier:r.supplier||'', City:r.city||'', Status:r.status, Date: r.dt?r.dt.toLocaleDateString('en-GB'):'', Quarter:r.qtr, Amount:r.amount }));
+
+    csv = toCSV(data, ['Booking ID','Branch','Department','Issue Type','Hotel','Submitted By','Service','Supplier','City','Status','Date','Quarter','Amount']);
+
+    name = prefix+'escalations.csv';
+
+  }
+
+  downloadCSV(csv, name);
+
+  showToast('Downloaded ' + name, 'success');
+
+}
+
+function exportEscalations() { exportReport('escalations'); }
+
+function exportAnalysis() {
+
+  if (!S.analysed) return;
+
+  const rows = S.filtered || S.analysed.rows;
+
+  const dim1 = document.getElementById('analysis-dim1').value;
+
+  const keyFns = { branch:r=>r.branch, dept:r=>r.isEsc?r.dept:null, service:r=>r.service, issue:r=>r.isEsc?r.issue:null, hotel:r=>r.isEsc?r.hotel:null, submitter:r=>r.isEsc?r.submitter:null, city:r=>r.city||null, supplier:r=>r.supplier||null };
+
+  const fn = keyFns[dim1] || keyFns.branch;
+
+  const m = new Map();
+
+  rows.forEach(r => { const k=fn(r); if(!k) return; if(!m.has(k)) m.set(k,{bk:0,esc:0}); const v=m.get(k); v.bk++; if(r.isEsc)v.esc++; });
+
+  const arr = [...m.entries()].map(([k,v])=>({ [dim1]:k, Bookings:v.bk, Escalations:v.esc, 'DR %':v.bk?+(v.esc/v.bk*100).toFixed(3):0 })).sort((a,b)=>b['DR %']-a['DR %']);
+
+  downloadCSV(toCSV(arr, [dim1,'Bookings','Escalations','DR %']), S.settings.filePrefix+'analysis_'+dim1+'.csv');
+
+  showToast('Analysis exported', 'success');
+
+}
+
+function exportFullExcel() {
+
+  if (!S.analysed) { showToast('No data loaded', 'error'); return; }
+
+  const rows = S.filtered || S.analysed.rows;
+
+  const esc  = rows.filter(r => r.isEsc);
+
+  const wb   = XLSX.utils.book_new();
+
+  const old = S.period; S.period = 'monthly';
+
+  const monthly = getTrendData(rows); S.period = 'weekly';
+
+  const weekly = getTrendData(rows); S.period = old;
+
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(monthly.map(r=>({ Period:r.label, Bookings:r.bk, Escalations:r.esc, 'DR %':r.dr }))), 'Monthly');
+
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(weekly.map(r=>({ 'Week starting':r.key, Bookings:r.bk, Escalations:r.esc, 'DR %':r.dr }))), 'Weekly');
+
+  const mBranch = new Map();
+
+  rows.forEach(r => { if(!mBranch.has(r.branch)) mBranch.set(r.branch,{bk:0,esc:0}); const v=mBranch.get(r.branch); v.bk++; if(r.isEsc)v.esc++; });
+
+  const branchArr = [...mBranch.entries()].map(([b,v])=>({ Branch:b, Bookings:v.bk, Escalations:v.esc, 'DR %':v.bk?+(v.esc/v.bk*100).toFixed(3):0 })).sort((a,b)=>b['DR %']-a['DR %']);
+
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(branchArr), 'Branch');
+
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(esc.map(r=>({ 'Booking ID':r.id, Branch:r.branch, Department:r.dept, Issue:r.issue, Hotel:r.hotel, 'Submitted By':r.submitter, Service:r.service, Supplier:r.supplier||'', City:r.city||'', Status:r.status, Date:r.dt?r.dt.toLocaleDateString('en-GB'):'', Amount:r.amount }))), 'Escalations');
+
+  XLSX.writeFile(wb, S.settings.filePrefix + 'full_report.xlsx');
+
+  showToast('Excel workbook downloaded', 'success');
+
+}
+
+// ═══════════════════════════════════════════════════
+
+// SETTINGS & BRANDING
+
+// ═══════════════════════════════════════════════════
+
+function switchSettingsTab(id, el) {
+
+  document.querySelectorAll('.settings-section').forEach(s => s.classList.remove('active'));
+
+  document.querySelectorAll('.s-nav-item').forEach(n => n.classList.remove('active'));
+
+  const sec = document.getElementById('stab-' + id);
+
+  if (sec) sec.classList.add('active');
+
+  if (el) el.classList.add('active');
+
+}
+
+function saveSetting(key, val) {
+
+  S.settings[key] = val;
+
+  try { localStorage.setItem('defectiq_settings', JSON.stringify(S.settings)); } catch(e){}
+
+}
+
+function loadSettings() {
+
+  try {
+
+    const raw = localStorage.getItem('defectiq_settings');
+
+    if (raw) Object.assign(S.settings, JSON.parse(raw));
+
+  } catch(e){}
+
+  // Reflect into inputs
+
+  ['brandName','brandSub','userName','userRole','orgName','defaultPeriod','tGreen','tAmber'].forEach(k => {
+
+    const el = document.getElementById('set-' + k);
+
+    if (el && S.settings[k] !== undefined) el.value = S.settings[k];
+
+  });
+
+}
+
+function uploadImage(input, key) {
+
+  const file = input.files[0];
+
+  if (!file) return;
+
+  const reader = new FileReader();
+
+  reader.onload = e => { saveSetting(key, e.target.result); applyBranding(); showToast('Image updated', 'success'); };
+
+  reader.readAsDataURL(file);
+
+}
+
+function clearImage(key) {
+
+  saveSetting(key, '');
+
+  const fileInput = document.getElementById('set-' + key + 'File');
+
+  if (fileInput) fileInput.value = '';
+
+  applyBranding();
+
+}
+
+function applyBranding() {
+
+  const bn = S.settings.brandName || 'DefectIQ';
+
+  const bs = S.settings.brandSub || '';
+
+  const un = S.settings.userName || 'User';
+
+  const ur = S.settings.userRole || '';
+
+  document.getElementById('brandName').textContent = bn;
+
+  document.getElementById('brandSub').textContent = bs;
+
+  document.getElementById('userName').textContent = un;
+
+  document.getElementById('userRole').textContent = ur;
+
+  const initials = un.split(/\s+/).map(w=>w[0]||'').join('').slice(0,2).toUpperCase();
+
+  const bIcon = document.getElementById('brandIcon');
+
+  bIcon.innerHTML = S.settings.brandLogo ? `<img src="${S.settings.brandLogo}" alt="logo">` : '<i class="ti ti-chart-dots"></i>';
+
+  const uAv = document.getElementById('userAvatar');
+
+  uAv.innerHTML = S.settings.userAvatar ? `<img src="${S.settings.userAvatar}" alt="avatar">` : initials;
+
+  // Preview cards
+
+  const bp = document.getElementById('brandPreviewIcon');
+
+  if (bp) bp.innerHTML = S.settings.brandLogo ? `<img src="${S.settings.brandLogo}" alt="logo">` : '<i class="ti ti-chart-dots"></i>';
+
+  const bpn = document.getElementById('brandPreviewName'); if (bpn) bpn.textContent = bn;
+
+  const bps = document.getElementById('brandPreviewSub'); if (bps) bps.textContent = bs;
+
+  const upa = document.getElementById('userPreviewAvatar');
+
+  if (upa) upa.innerHTML = S.settings.userAvatar ? `<img src="${S.settings.userAvatar}" alt="avatar">` : initials;
+
+  const upn = document.getElementById('userPreviewName'); if (upn) upn.textContent = un;
+
+  const upr = document.getElementById('userPreviewRole'); if (upr) upr.textContent = ur;
+
+}
+
+// ═══════════════════════════════════════════════════
+
+// HISTORY
+
+// ═══════════════════════════════════════════════════
+
+function addToHistory(entry) {
+
+  S.history.unshift(entry);
+
+  if (S.history.length > 20) S.history.pop();
+
+  renderHistory();
+
+}
+
+function renderHistory() {
+
+  const full = document.getElementById('historyFull');
+
+  if (!full) return;
+
+  const clearBtn = document.getElementById('historyClearBtn');
+
+  if (!S.history.length) {
+
+    full.innerHTML = `<div class="empty-state" style="padding:40px 0">
+
+      <i class="ti ti-database-off"></i>
+
+      <h3>No uploads yet</h3>
+
+      <p>Upload your first dataset to see it listed here</p>
+
+    </div>`;
+
+    if (clearBtn) clearBtn.style.display = 'none';
+
+    return;
+
+  }
+
+  if (clearBtn) clearBtn.style.display = 'inline-flex';
+
+  let h = '';
+
+  S.history.forEach((e, idx) => {
+
+    h += `<div class="report-item">
+
+      <div class="report-icon"><i class="ti ti-file-spreadsheet"></i></div>
+
+      <div class="report-info">
+
+        <div class="report-name">${escapeHtml(e.bkFile)}</div>
+
+        <div class="report-desc">${e.total.toLocaleString()} bookings · ${e.matched} escalations · ${new Date(e.loadedAt).toLocaleString()}</div>
+
+      </div>
+
+      <span class="badge badge-green">${e.matched} matched</span>
+
+      <button class="btn btn-sm" onclick="removeHistoryEntry(${idx})" title="Remove" style="margin-left:8px"><i class="ti ti-trash"></i></button>
+
+    </div>`;
+
+  });
+
+  full.innerHTML = h;
+
+}
+
+function removeHistoryEntry(idx) {
+
+  S.history.splice(idx, 1);
+
+  renderHistory();
+
+  showToast('History entry removed', 'success');
+
+}
+
+function clearHistory() {
+
+  if (!S.history.length) return;
+
+  if (!confirm('Clear all upload history? This cannot be undone.')) return;
+
+  S.history = [];
+
+  renderHistory();
+
+  showToast('Upload history cleared', 'success');
+
+}
+
+// ═══════════════════════════════════════════════════
+
+// HELPERS
+
+// ═══════════════════════════════════════════════════
+
+function escapeHtml(s) {
+
+  return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+}
+
+let toastTimer;
+
+function showToast(msg, type = '') {
+
+  const t = document.getElementById('toast');
+
+  const m = document.getElementById('toastMsg');
+
+  t.className = 'toast' + (type ? ' ' + type : '');
+
+  m.textContent = msg;
+
+  t.classList.add('show');
+
+  clearTimeout(toastTimer);
+
+  toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
+
+}
+
+function showAbout() {
+
+  switchScreen('settings', document.querySelector('[data-screen=settings]'));
+
+  setTimeout(() => switchSettingsTab('about', document.querySelector('.s-nav-item:nth-child(4)')), 100);
+
+}
+
+// Init
+
+loadSettings();
+
+applyBranding();
+
+</script>
+
+</body>
+
+</html>
